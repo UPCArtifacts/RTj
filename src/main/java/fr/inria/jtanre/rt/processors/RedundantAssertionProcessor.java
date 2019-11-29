@@ -4,11 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import fr.inria.astor.approaches.extensions.rt.core.Classification;
-import fr.inria.astor.approaches.extensions.rt.core.GenericTestAnalysisResults;
-import fr.inria.astor.approaches.extensions.rt.core.ResultMap;
-import fr.inria.astor.approaches.extensions.rt.elements.AsAssertion;
 import fr.inria.astor.core.faultlocalization.entity.SuspiciousCode;
+import fr.inria.jtanre.rt.core.Classification;
+import fr.inria.jtanre.rt.core.GenericTestAnalysisResults;
+import fr.inria.jtanre.rt.core.ResultMap;
+import fr.inria.jtanre.rt.elements.AsAssertion;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.declaration.CtClass;

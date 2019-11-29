@@ -7,14 +7,14 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
-import fr.inria.astor.approaches.extensions.rt.core.Classification;
-import fr.inria.astor.approaches.extensions.rt.core.GenericTestAnalysisResults;
-import fr.inria.astor.approaches.extensions.rt.core.ResultMap;
-import fr.inria.astor.approaches.extensions.rt.elements.AsAssertion;
-import fr.inria.astor.approaches.extensions.rt.elements.Helper;
-import fr.inria.astor.approaches.extensions.rt.elements.TestElement;
 import fr.inria.astor.core.faultlocalization.entity.SuspiciousCode;
 import fr.inria.astor.core.faultlocalization.gzoltar.TestCaseResult;
+import fr.inria.jtanre.rt.core.Classification;
+import fr.inria.jtanre.rt.core.GenericTestAnalysisResults;
+import fr.inria.jtanre.rt.core.ResultMap;
+import fr.inria.jtanre.rt.elements.AsAssertion;
+import fr.inria.jtanre.rt.elements.Helper;
+import fr.inria.jtanre.rt.elements.TestElement;
 import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtCatch;
 import spoon.reflect.code.CtIf;

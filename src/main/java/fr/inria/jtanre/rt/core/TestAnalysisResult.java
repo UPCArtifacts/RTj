@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import fr.inria.astor.approaches.extensions.rt.elements.AsAssertion;
-import fr.inria.astor.approaches.extensions.rt.elements.Helper;
-import fr.inria.astor.approaches.extensions.rt.elements.Skip;
-import fr.inria.astor.approaches.extensions.rt.elements.TestElement;
+import fr.inria.jtanre.rt.elements.AsAssertion;
+import fr.inria.jtanre.rt.elements.Helper;
+import fr.inria.jtanre.rt.elements.Skip;
+import fr.inria.jtanre.rt.elements.TestElement;
 import spoon.reflect.code.CtInvocation;
 
 public class TestAnalysisResult {

@@ -6,13 +6,13 @@ import java.util.Map;
 
 import org.junit.Test;
 
-import fr.inria.astor.approaches.extensions.rt.core.Classification;
-import fr.inria.astor.approaches.extensions.rt.core.GenericTestAnalysisResults;
-import fr.inria.astor.approaches.extensions.rt.core.ResultMap;
-import fr.inria.astor.approaches.extensions.rt.elements.AsAssertion;
-import fr.inria.astor.approaches.extensions.rt.elements.Helper;
-import fr.inria.astor.approaches.extensions.rt.elements.Skip;
 import fr.inria.astor.core.faultlocalization.entity.SuspiciousCode;
+import fr.inria.jtanre.rt.core.Classification;
+import fr.inria.jtanre.rt.core.GenericTestAnalysisResults;
+import fr.inria.jtanre.rt.core.ResultMap;
+import fr.inria.jtanre.rt.elements.AsAssertion;
+import fr.inria.jtanre.rt.elements.Helper;
+import fr.inria.jtanre.rt.elements.Skip;
 import spoon.reflect.code.CtLambda;
 import spoon.reflect.code.CtReturn;
 import spoon.reflect.code.CtStatement;
