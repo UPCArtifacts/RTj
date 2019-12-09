@@ -1708,20 +1708,16 @@ public class RtTestExamples {
 		String dep1 = new File("./examples/libs/junit-4.12.jar").getAbsolutePath();
 		String dep2 = new File("./examples/libs/hamcrest-core-1.3.jar").getAbsolutePath();
 		File out = new File(ConfigurationProperties.getProperty("workingDirectory"));
-		int generations = 500;
 
 		String[] args = new String[] { "-dependencies", (dep1 + File.pathSeparator + dep2), "-javacompliancelevel", "7",
-				"-flthreshold", "0.5", "-out", out.getAbsolutePath(), "-scope", "local", "-seed", "10", "-maxgen",
-				Integer.toString(generations), "-stopfirst", "true", "-maxtime", "100",
+
+				"-out", out.getAbsolutePath(),
 
 		};
 		CommandSummary cs = new CommandSummary(args);
-		cs.command.put("-stopfirst", "true");
 		cs.command.put("-loglevel", "INFO");
 		cs.command.put("-location", new File("./examples/rt-project/").getAbsolutePath());
-		cs.command.put("-mode", "custom");
-		cs.command.put("-customengine", RtEngine.class.getCanonicalName());
-		cs.command.put("-parameters", "canhavezerosusp:true");
+		cs.command.put("-mode", "rt");
 
 		main1.execute(cs.flat());
 		RtEngine etEn = (RtEngine) main1.getEngine();
@@ -1735,20 +1731,17 @@ public class RtTestExamples {
 		String dep2 = new File("./examples/libs/hamcrest-core-1.3.jar").getAbsolutePath();
 
 		File out = new File(ConfigurationProperties.getProperty("workingDirectory"));
-		int generations = 500;
 
 		String[] args = new String[] { "-dependencies", (dep1 + File.pathSeparator + dep2), "-javacompliancelevel", "7",
-				"-flthreshold", "0.5", "-out", out.getAbsolutePath(), "-scope", "local", "-seed", "10", "-maxgen",
-				Integer.toString(generations), "-stopfirst", "true", "-maxtime", "100",
+				"-out", out.getAbsolutePath(),
 
 		};
 		CommandSummary cs = new CommandSummary(args);
-		cs.command.put("-stopfirst", "true");
+
 		cs.command.put("-loglevel", "INFO");
 		cs.command.put("-location", new File("./examples/rt-project/").getAbsolutePath());
-		cs.command.put("-mode", "custom");
-		cs.command.put("-customengine", RtEngine.class.getCanonicalName());
-		cs.command.put("-parameters", "canhavezerosusp:true:skipanalysis:true");
+		cs.command.put("-mode", "rt");
+		cs.command.put("-parameters", "skipanalysis:true");
 
 		main1.execute(cs.flat());
 		RtEngine etEn = (RtEngine) main1.getEngine();

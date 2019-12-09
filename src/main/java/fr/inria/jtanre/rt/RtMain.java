@@ -23,7 +23,15 @@ public class RtMain extends AstorMain {
 
 		MutationSupporter mutSupporter = new MutationSupporter();
 
-		rtCore = new RtEngine(mutSupporter, projectFacade);
+		String mode = ConfigurationProperties.getProperty("mode").toLowerCase();
+		// Creation of the execution mode
+		if (mode.equals("rt")) {
+			rtCore = new RtEngine(mutSupporter, projectFacade);
+		} else {
+			rtCore = createEngineFromArgument(mode, mutSupporter, projectFacade);
+		}
+
+		// Execution:
 
 		// Model creation
 		ProgramModel<?> model = ((RtEngine) rtCore).createModel();
@@ -33,7 +41,7 @@ public class RtMain extends AstorMain {
 
 		ConfigurationProperties.print();
 
-		((RtEngine) rtCore).analyzeTests(model, dynamicInfo);
+		((RtEngine) rtCore).runTestAnalyzers(model, dynamicInfo);
 
 		((RtEngine) rtCore).atEnd();
 

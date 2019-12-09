@@ -13,8 +13,11 @@ public class DynamicTestInformation {
 
 	List<SuspiciousCode> allExecutedStatements = null;
 
-	public DynamicTestInformation(List<SuspiciousCode> allExecutedStatements) {
+	List<String> testExecuted = null;
+
+	public DynamicTestInformation(List<SuspiciousCode> allExecutedStatements, List<String> testExecuted) {
 		this.allExecutedStatements = allExecutedStatements;
+		this.testExecuted = testExecuted;
 	}
 
 	public List<SuspiciousCode> getAllExecutedStatements() {
@@ -23,6 +26,14 @@ public class DynamicTestInformation {
 
 	public void setAllExecutedStatements(List<SuspiciousCode> allExecutedStatements) {
 		this.allExecutedStatements = allExecutedStatements;
+	}
+
+	public List<String> getTestExecuted() {
+		return testExecuted;
+	}
+
+	public void setTestExecuted(List<String> testExecuted) {
+		this.testExecuted = testExecuted;
 	}
 
 }

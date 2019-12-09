@@ -72,6 +72,7 @@ public class RtEngine extends AstorCoreEngine {
 	public RtEngine(MutationSupporter mutatorExecutor, ProjectRepairFacade projFacade) throws JSAPException {
 		super(mutatorExecutor, projFacade);
 
+		ConfigurationProperties.setProperty("canhavezerosusp", "true");
 		ConfigurationProperties.setProperty("includeTestInSusp", "true");
 		ConfigurationProperties.setProperty("limitbysuspicious", "false");
 		ConfigurationProperties.setProperty("maxsuspcandidates", "1");
@@ -104,9 +105,48 @@ public class RtEngine extends AstorCoreEngine {
 
 	Exception exceptionReceived = null;
 
-	public void analyzeTests(ProgramModel<?> model, DynamicTestInformation dynamicInfo) throws Exception {
+	/**
+	 * Execute the test cases from the application under analysis
+	 * 
+	 * @return
+	 * @throws Exception
+	 */
+	public DynamicTestInformation runTests() throws Exception {
 
-		if (projectFacade.getProperties().getRegressionTestCases().isEmpty()) {
+		this.loadFaultLocalization();
+
+		this.loadValidator();
+
+		List<SuspiciousCode> suspicious = this.calculateSuspicious();
+
+		List<String> testToRun = projectFacade.getProperties().getRegressionTestCases();
+		dynamicInfo = new DynamicTestInformation(suspicious, testToRun);
+		return dynamicInfo;
+
+	}
+
+	/**
+	 * Creates the model of the application under analysis
+	 * 
+	 * @return
+	 * @throws Exception
+	 */
+	public ProgramModel<?> createModel() throws Exception {
+		this.loadCompiler();
+		this.initModel();
+		this.model = new SpoonProgramModel();
+		return model;
+	}
+
+	/**
+	 * 
+	 * @param model
+	 * @param dynamicInfo
+	 * @throws Exception
+	 */
+	public void runTestAnalyzers(ProgramModel<?> model, DynamicTestInformation dynamicInfo) throws Exception {
+
+		if (dynamicInfo.getTestExecuted().isEmpty()) {
 			log.error("No test can be found");
 			exceptionReceived = new Exception("No test can be found");
 		} else {
@@ -428,26 +468,6 @@ public class RtEngine extends AstorCoreEngine {
 
 	protected DynamicTestInformation dynamicInfo = null;
 	protected ProgramModel<?> model = null;
-
-	public DynamicTestInformation runTests() throws Exception {
-
-		this.loadFaultLocalization();
-
-		this.loadValidator();
-
-		List<SuspiciousCode> suspicious = this.calculateSuspicious();
-
-		dynamicInfo = new DynamicTestInformation(suspicious);
-		return dynamicInfo;
-
-	}
-
-	public ProgramModel<?> createModel() throws Exception {
-		this.loadCompiler();
-		this.initModel();
-		this.model = new SpoonProgramModel();
-		return model;
-	}
 
 	public DynamicTestInformation getDynamicInfo() {
 		return dynamicInfo;
