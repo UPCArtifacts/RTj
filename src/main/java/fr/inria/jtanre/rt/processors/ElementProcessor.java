@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
+import fr.inria.astor.core.entities.ProgramVariant;
 import fr.inria.astor.core.faultlocalization.entity.SuspiciousCode;
 import fr.inria.astor.core.faultlocalization.gzoltar.TestCaseResult;
 import fr.inria.jtanre.rt.core.Classification;
@@ -34,7 +35,7 @@ import spoon.reflect.visitor.filter.LineFilter;
  *
  * @param <T>
  */
-public abstract class ElementProcessor<T, C> {
+public abstract class ElementProcessor<T, C> implements TestAnalyzer<T, C> {
 	protected static Logger log = Logger.getLogger(Thread.currentThread().getName());
 
 	protected static final String ASSUME = "assume";
@@ -43,15 +44,11 @@ public abstract class ElementProcessor<T, C> {
 
 	protected static final String ASSERT = "assert";
 
-	public abstract List<T> findElements(Map<String, List<?>> previousPartialResults, List<CtStatement> stmts,
-			CtExecutable testMethodModel, List<CtClass> allClasses);
-
-	public abstract Classification<C> classifyElements(ResultMap<Classification<?>> previousDynamic,
-			CtClass testClassdModel, CtExecutable testMethodModel, Map<String, SuspiciousCode> mapCacheSuspicious,
-			CtStatement stmts, List<T> retrievedElementsFromStatic);
-
-	public abstract void labelTest(GenericTestAnalysisResults analysisResult, List<T> staticAnalysis,
-			Classification<C> dynamic, ResultMap<List<?>> statics, ResultMap<Classification<?>> dynamics);
+	@Override
+	public List<ProgramVariant> refactor(GenericTestAnalysisResults analysisResult, List<T> staticAnalysis,
+			Classification<C> dynamic, ResultMap<List<?>> statics, ResultMap<Classification<?>> dynamics) {
+		return null;
+	};
 
 	protected List<CtInvocation> filterInvocation(List<CtStatement> allStmtsFromClass, String filterName) {
 		List<CtInvocation> assertions = new ArrayList<>();

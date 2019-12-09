@@ -17,13 +17,13 @@ import org.junit.Test;
 
 import fr.inria.astor.core.setup.ConfigurationProperties;
 import fr.inria.jtanre.rt.RtEngine;
+import fr.inria.jtanre.rt.RtMain;
 import fr.inria.jtanre.rt.core.RuntimeInformation;
 import fr.inria.jtanre.rt.core.TestAnalysisResult;
 import fr.inria.jtanre.rt.core.TestIntermediateAnalysisResult;
 import fr.inria.jtanre.rt.elements.AsAssertion;
 import fr.inria.jtanre.rt.elements.Helper;
 import fr.inria.main.CommandSummary;
-import fr.inria.main.evolution.AstorMain;
 import spoon.reflect.code.CtInvocation;
 
 /**
@@ -1649,6 +1649,29 @@ public class RtTestExamples {
 
 	}
 
+	@Test
+	public void testRTFRow32PurityTest() throws Exception {
+		RtEngine etEn = detectRtSkip();
+
+		List<TestIntermediateAnalysisResult> resultByTest = etEn.getResultByTest();
+		assertNotNull(resultByTest);
+
+		RuntimeInformation dynInf = etEn.computeDynamicInformation();
+
+		// First case: not executed a method inv
+		TestIntermediateAnalysisResult rottenTest0 = etEn.processSingleTest(dynInf,
+				"RottenTestsFinder.FakePaperTests.RTFRow32Purity", "test0");
+
+		assertNotNull(rottenTest0);
+
+		// assertFalse(rottenTest0.getClassificationHelperCall().getResultNotExecuted().isEmpty());
+
+		// assertFalse(rottenTest0.isRotten());
+
+		// TestAnalysisResult finalResult = rottenTest0.generateFinalResult();
+
+	}
+
 	private void checkFp(List<TestIntermediateAnalysisResult> tc, boolean toverif, String testname) {
 		Optional<TestIntermediateAnalysisResult> rotten01 = tc.stream()
 				.filter(e -> e.getTestMethodFromClass().equals(testname)).findFirst();
@@ -1680,7 +1703,7 @@ public class RtTestExamples {
 	}
 
 	private RtEngine detectRt() throws Exception {
-		AstorMain main1 = new AstorMain();
+		RtMain main1 = new RtMain();
 
 		String dep1 = new File("./examples/libs/junit-4.12.jar").getAbsolutePath();
 		String dep2 = new File("./examples/libs/hamcrest-core-1.3.jar").getAbsolutePath();
@@ -1706,7 +1729,7 @@ public class RtTestExamples {
 	}
 
 	private RtEngine detectRtSkip() throws Exception {
-		AstorMain main1 = new AstorMain();
+		RtMain main1 = new RtMain();
 
 		String dep1 = new File("./examples/libs/junit-4.12.jar").getAbsolutePath();
 		String dep2 = new File("./examples/libs/hamcrest-core-1.3.jar").getAbsolutePath();

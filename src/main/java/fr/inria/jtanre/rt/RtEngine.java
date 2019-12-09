@@ -23,8 +23,11 @@ import fr.inria.astor.core.setup.ProjectRepairFacade;
 import fr.inria.astor.core.solutionsearch.AstorCoreEngine;
 import fr.inria.astor.util.MapList;
 import fr.inria.jtanre.rt.core.Classification;
+import fr.inria.jtanre.rt.core.DynamicTestInformation;
+import fr.inria.jtanre.rt.core.ProgramModel;
 import fr.inria.jtanre.rt.core.ResultMap;
 import fr.inria.jtanre.rt.core.RuntimeInformation;
+import fr.inria.jtanre.rt.core.SpoonProgramModel;
 import fr.inria.jtanre.rt.core.TestIntermediateAnalysisResult;
 import fr.inria.jtanre.rt.elements.AsAssertion;
 import fr.inria.jtanre.rt.out.JSonResultOriginal;
@@ -58,8 +61,6 @@ import spoon.support.reflect.declaration.CtClassImpl;
  *
  */
 public class RtEngine extends AstorCoreEngine {
-
-	List<SuspiciousCode> allExecutedStatements = null;
 
 	public List<TestIntermediateAnalysisResult> resultByTest = new ArrayList<>();
 
@@ -101,15 +102,9 @@ public class RtEngine extends AstorCoreEngine {
 
 	}
 
-	@Override
-	protected void initializePopulation(List<SuspiciousCode> suspicious) throws Exception {
-		allExecutedStatements = suspicious;
-	}
-
 	Exception exceptionReceived = null;
 
-	@Override
-	public void startEvolution() throws Exception {
+	public void analyzeTests(ProgramModel<?> model, DynamicTestInformation dynamicInfo) throws Exception {
 
 		if (projectFacade.getProperties().getRegressionTestCases().isEmpty()) {
 			log.error("No test can be found");
@@ -118,7 +113,7 @@ public class RtEngine extends AstorCoreEngine {
 
 			if (!ConfigurationProperties.getPropertyBool("skipanalysis")) {
 				try {
-					RuntimeInformation ri = computeDynamicInformation();
+					RuntimeInformation ri = computeDynamicInformation(dynamicInfo);
 					analyzeTestSuiteExecution(ri);
 
 				} catch (Exception e) {
@@ -131,6 +126,10 @@ public class RtEngine extends AstorCoreEngine {
 	}
 
 	public RuntimeInformation computeDynamicInformation() throws Exception {
+		return computeDynamicInformation(this.dynamicInfo);
+	}
+
+	public RuntimeInformation computeDynamicInformation(DynamicTestInformation dynamicInfo) throws Exception {
 		List<String> allTestCases = new ArrayList();
 
 		List<String> allTestCasesWithoutParent = this.getProjectFacade().getProperties().getRegressionTestCases();
@@ -168,7 +167,7 @@ public class RtEngine extends AstorCoreEngine {
 		// key is test class, values are method (cases)
 		MapList<String, String> passingCoveredTestCaseFromClass = new MapList<>();
 
-		for (SuspiciousCode executed : allExecutedStatements) {
+		for (SuspiciousCode executed : dynamicInfo.getAllExecutedStatements()) {
 
 			for (TestCaseResult tcr : executed.getCoveredByTests()) {
 				String testCaseName = formatTestCaseName(tcr.getTestCaseName());
@@ -187,7 +186,7 @@ public class RtEngine extends AstorCoreEngine {
 		MapList<String, Integer> mapLinesCovered = new MapList<>();
 		Map<String, SuspiciousCode> mapCacheSuspicious = new HashMap<>();
 
-		for (SuspiciousCode executedStatement : allExecutedStatements) {
+		for (SuspiciousCode executedStatement : dynamicInfo.getAllExecutedStatements()) {
 			mapLinesCovered.add(executedStatement.getClassName(), executedStatement.getLineNumber());
 			mapCacheSuspicious.put(executedStatement.getClassName() + executedStatement.getLineNumber(),
 					executedStatement);
@@ -277,6 +276,12 @@ public class RtEngine extends AstorCoreEngine {
 
 	}
 
+	@Override
+	public void startEvolution() throws Exception {
+
+	}
+
+	@SuppressWarnings("unchecked")
 	public TestIntermediateAnalysisResult processTest(String aTestMethodFromClass, String aNameOfTestClass,
 			CtClass aTestModelCtClass, RuntimeInformation runtimeinfo) {
 		log.info("**** Analying TestMethod: " + aTestMethodFromClass);
@@ -293,7 +298,6 @@ public class RtEngine extends AstorCoreEngine {
 			return null;
 		}
 		CtExecutable testMethodModel = testMethodOp.get().getDeclaration();
-//		List<String> expectException = expectEx(testMethodModel);
 
 		TestIntermediateAnalysisResult resultTestCase = new TestIntermediateAnalysisResult(aNameOfTestClass,
 				aTestMethodFromClass, testMethodModel, partialStaticResults, partialDynamicResults);
@@ -308,22 +312,6 @@ public class RtEngine extends AstorCoreEngine {
 		}
 		// get all statements
 		List<CtStatement> allStmtsFromClass = testMethodModel.getElements(new LineFilter());
-//
-//		List<CtInvocation> allExpectedExceptionFromTest = filterExpectedExceptions(allStmtsFromClass);
-//
-//		List<CtInvocation> allAssumesFromTest = filterAssume(allStmtsFromClass);
-//		List<CtInvocation> allAssertionsFromTest = filterAssertions(allStmtsFromClass);
-//		List<CtInvocation> allFailsFromTest = filterFails(allStmtsFromClass);
-//		List<Helper> allHelperInvocationFromTest = filterHelper(allStmtsFromClass, new ArrayList());
-//		// filter from assertions the missed fail
-//		List<CtInvocation> allMissedFailFromTest = filterMissedFail(allAssertionsFromTest);
-//		List<CtInvocation> allRedundantAssertionFromTest = filterRedundantAssertions(allAssertionsFromTest);
-//
-//	ok	allAssertionsFromTest.removeAll(allMissedFailFromTest);
-//
-//		List<CtReturn> allSkipFromTest = filterSkips(allStmtsFromClass, testMethodModel, allClasses);
-
-		// Find elements
 
 		for (ElementProcessor elementProcessor : this.elementProcessor) {
 
@@ -343,8 +331,6 @@ public class RtEngine extends AstorCoreEngine {
 			partialDynamicResults.put(elementProcessor.getClass().getSimpleName(), classif);
 			// }
 
-			// partialResults.put(elementProcessor.getClass().getSimpleName(),
-			// retrievedElements);
 		}
 		/// Labelling
 
@@ -353,74 +339,14 @@ public class RtEngine extends AstorCoreEngine {
 
 			List<?> retrievedElements = partialStaticResults.get(elementProcessor.getClass());
 			Classification<?> classif = partialDynamicResults.get(elementProcessor.getClass());
-			// if (classif != null) {
-			// partialDynamicResults.put(elementProcessor.getClass().getSimpleName(),
-			// classif);
 
 			elementProcessor.labelTest(resultTestCase, retrievedElements, null, partialStaticResults,
 					partialDynamicResults);
-			// }
 
-			// partialResults.put(elementProcessor.getClass().getSimpleName(),
-			// retrievedElements);
+			elementProcessor.refactor(resultTestCase, retrievedElements, null, partialStaticResults,
+					partialDynamicResults);
+
 		}
-
-		//
-		// Fail missing analysis
-//	OK	Classification<AsAssertion> rFailMissing = classifyAssertions(testMethodModel, runtimeinfo.mapCacheSuspicious,
-//				aTestModelCtClass, allMissedFailFromTest);
-//
-//	ok	chechInsideTry(rFailMissing.resultExecuted, runtimeinfo.mapCacheSuspicious, aTestModelCtClass, testMethodModel);
-//	ok	chechInsideTry(rFailMissing.resultNotExecuted, runtimeinfo.mapCacheSuspicious, aTestModelCtClass,
-//				testMethodModel);
-//
-//		// Redundant
-//	ok	Classification<AsAssertion> rRedundantAssertion = classifyAssertions(testMethodModel,
-//				runtimeinfo.mapCacheSuspicious, aTestModelCtClass, allRedundantAssertionFromTest);
-//
-//		// TODO: to move?
-//	ok	chechInsideTry(rRedundantAssertion.resultExecuted, runtimeinfo.mapCacheSuspicious, aTestModelCtClass,
-//				testMethodModel);
-//	ok	chechInsideTry(rRedundantAssertion.resultNotExecuted, runtimeinfo.mapCacheSuspicious, aTestModelCtClass,
-//				testMethodModel);
-
-//	ok	Classification<AsAssertion> rAssert = classifyAssertions(testMethodModel, runtimeinfo.mapCacheSuspicious,
-//				aTestModelCtClass, allAssertionsFromTest);
-
-//	ok	Classification<Helper> rHelperCall = classifyHelpersAssertionExecution(aTestModelCtClass,
-//				allHelperInvocationFromTest, runtimeinfo.mapCacheSuspicious, testMethodModel, false);
-//
-//	ok	Classification<Helper> rHelperAssertion = classifyHelpersAssertionExecution(aTestModelCtClass,
-//				allHelperInvocationFromTest, runtimeinfo.mapCacheSuspicious, testMethodModel, true);
-
-//		if (rHelperAssertion.getResultExecuted().isEmpty() && rHelperCall.getResultExecuted().isEmpty()
-//				&& rAssert.getResultExecuted().isEmpty()) {
-//			boolean anyExecuted = checkAnyStatementExecuted(allStmtsFromClass, runtimeinfo.mapCacheSuspicious,
-//					aTestModelCtClass, testMethodModel);
-//			// If any statement in the test code was executed, we return.
-//			if (!anyExecuted) {
-//				log.info("NO test element executed for test " + aTestMethodFromClass + ", class " + aNameOfTestClass
-//						+ " any executed: " + anyExecuted);
-//
-//				return null;
-//			}
-//		}
-		// ok boolean onlyAssumeExecuted = checkOnlyAssumeExecuted(allStmtsFromClass,
-		// runtimeinfo.mapCacheSuspicious,
-		// aTestModelCtClass, allAssumesFromTest, testMethodModel);
-
-		// We exclude assertions and fails from the list of other method invocations.
-//	ok	List<CtInvocation> allMIFromTest = testMethodModel.getBody().getElements(new TypeFilter<>(CtInvocation.class));
-//	ok	allMIFromTest.removeAll(allAssertionsFromTest);
-//	ok	allMIFromTest.removeAll(allFailsFromTest);
-
-		// Removing assertion called from helpers not executed
-//ok		ignoringHelperAssertionFromNotExecutedHelper(rHelperAssertion.resultNotExecuted, rHelperCall.resultNotExecuted);
-
-//		TestIntermediateAnalysisResult resultTestCase = new TestIntermediateAnalysisResult(this, onlyAssumeExecuted,
-//				allAssumesFromTest, rAssert, rHelperAssertion, rHelperCall, aNameOfTestClass, aTestMethodFromClass,
-//				testMethodModel, rFailMissing, rRedundantAssertion, allSkipFromTest, expectException,
-//				allExpectedExceptionFromTest, allMIFromTest, allFailsFromTest);
 
 		return resultTestCase;
 
@@ -498,6 +424,45 @@ public class RtEngine extends AstorCoreEngine {
 			e.printStackTrace();
 			log.error(e);
 		}
+	}
+
+	protected DynamicTestInformation dynamicInfo = null;
+	protected ProgramModel<?> model = null;
+
+	public DynamicTestInformation runTests() throws Exception {
+
+		this.loadFaultLocalization();
+
+		this.loadValidator();
+
+		List<SuspiciousCode> suspicious = this.calculateSuspicious();
+
+		dynamicInfo = new DynamicTestInformation(suspicious);
+		return dynamicInfo;
+
+	}
+
+	public ProgramModel<?> createModel() throws Exception {
+		this.loadCompiler();
+		this.initModel();
+		this.model = new SpoonProgramModel();
+		return model;
+	}
+
+	public DynamicTestInformation getDynamicInfo() {
+		return dynamicInfo;
+	}
+
+	public void setDynamicInfo(DynamicTestInformation dynamicInfo) {
+		this.dynamicInfo = dynamicInfo;
+	}
+
+	public ProgramModel<?> getModel() {
+		return model;
+	}
+
+	public void setModel(ProgramModel<?> model) {
+		this.model = model;
 	}
 
 }
