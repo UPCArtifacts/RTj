@@ -916,6 +916,8 @@ public class RtTestExamples {
 		assertTrue(fr2.skip.isEmpty());
 		assertTrue(fr2.redundantAssertion.isEmpty());
 
+		// refactor
+		assertTrue(etEn.getSolutions().size() > 0);
 	}
 
 	@Test
@@ -1715,7 +1717,7 @@ public class RtTestExamples {
 
 		};
 		CommandSummary cs = new CommandSummary(args);
-		cs.command.put("-loglevel", "INFO");
+		cs.command.put("-loglevel", "DEBUG");
 		cs.command.put("-location", new File("./examples/rt-project/").getAbsolutePath());
 		cs.command.put("-mode", "rt");
 
@@ -1733,9 +1735,7 @@ public class RtTestExamples {
 		File out = new File(ConfigurationProperties.getProperty("workingDirectory"));
 
 		String[] args = new String[] { "-dependencies", (dep1 + File.pathSeparator + dep2), "-javacompliancelevel", "7",
-				"-out", out.getAbsolutePath(),
-
-		};
+				"-out", out.getAbsolutePath(), };
 		CommandSummary cs = new CommandSummary(args);
 
 		cs.command.put("-loglevel", "INFO");

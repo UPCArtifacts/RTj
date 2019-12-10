@@ -15,6 +15,8 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.martiansoftware.jsap.JSAPException;
 
+import fr.inria.astor.core.entities.OperatorInstance;
+import fr.inria.astor.core.entities.ProgramVariant;
 import fr.inria.astor.core.faultlocalization.entity.SuspiciousCode;
 import fr.inria.astor.core.faultlocalization.gzoltar.TestCaseResult;
 import fr.inria.astor.core.manipulation.MutationSupporter;
@@ -46,13 +48,11 @@ import fr.inria.jtanre.rt.processors.OtherInvocationsProcessor;
 import fr.inria.jtanre.rt.processors.RedundantAssertionProcessor;
 import fr.inria.jtanre.rt.processors.SkipProcessor;
 import fr.inria.jtanre.rt.processors.SmokeProcessor;
-import spoon.reflect.code.CtStatement;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
-import spoon.reflect.visitor.filter.LineFilter;
 import spoon.support.reflect.declaration.CtClassImpl;
 
 /**
@@ -68,6 +68,9 @@ public class RtEngine extends AstorCoreEngine {
 			"org.junit", "cucumber", "org.jbehave");
 
 	List<ElementProcessor<?, ?>> elementProcessor = new ArrayList<>();
+
+	protected DynamicTestInformation dynamicInfo = null;
+	protected ProgramModel model = null;
 
 	public RtEngine(MutationSupporter mutatorExecutor, ProjectRepairFacade projFacade) throws JSAPException {
 		super(mutatorExecutor, projFacade);
@@ -131,7 +134,7 @@ public class RtEngine extends AstorCoreEngine {
 	 * @return
 	 * @throws Exception
 	 */
-	public ProgramModel<?> createModel() throws Exception {
+	public ProgramModel createModel() throws Exception {
 		this.loadCompiler();
 		this.initModel();
 		this.model = new SpoonProgramModel();
@@ -144,7 +147,7 @@ public class RtEngine extends AstorCoreEngine {
 	 * @param dynamicInfo
 	 * @throws Exception
 	 */
-	public void runTestAnalyzers(ProgramModel<?> model, DynamicTestInformation dynamicInfo) throws Exception {
+	public void runTestAnalyzers(ProgramModel model, DynamicTestInformation dynamicInfo) throws Exception {
 
 		if (dynamicInfo.getTestExecuted().isEmpty()) {
 			log.error("No test can be found");
@@ -153,8 +156,8 @@ public class RtEngine extends AstorCoreEngine {
 
 			if (!ConfigurationProperties.getPropertyBool("skipanalysis")) {
 				try {
-					RuntimeInformation ri = computeDynamicInformation(dynamicInfo);
-					analyzeTestSuiteExecution(ri);
+					RuntimeInformation ri = computeDynamicInformation(model, dynamicInfo);
+					analyzeTestSuiteExecution(model, ri);
 
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -166,10 +169,11 @@ public class RtEngine extends AstorCoreEngine {
 	}
 
 	public RuntimeInformation computeDynamicInformation() throws Exception {
-		return computeDynamicInformation(this.dynamicInfo);
+		return computeDynamicInformation(this.model, this.dynamicInfo);
 	}
 
-	public RuntimeInformation computeDynamicInformation(DynamicTestInformation dynamicInfo) throws Exception {
+	public RuntimeInformation computeDynamicInformation(ProgramModel model2, DynamicTestInformation dynamicInfo)
+			throws Exception {
 		List<String> allTestCases = new ArrayList();
 
 		List<String> allTestCasesWithoutParent = this.getProjectFacade().getProperties().getRegressionTestCases();
@@ -255,7 +259,7 @@ public class RtEngine extends AstorCoreEngine {
 
 	}
 
-	public void analyzeTestSuiteExecution(RuntimeInformation runtimeinfo) {
+	public void analyzeTestSuiteExecution(ProgramModel model, RuntimeInformation runtimeinfo) {
 		// For each class name
 		for (String aNameOfTestClass : runtimeinfo.allTestCases) {
 
@@ -264,11 +268,13 @@ public class RtEngine extends AstorCoreEngine {
 				continue;
 			}
 			log.info("*-*-*-*----- Analying TestClass: " + aNameOfTestClass);
-			CtClass aTestModelCtClass = MutationSupporter.getFactory().Class().get(aNameOfTestClass);
-			if (aTestModelCtClass == null) {
+
+			if (!model.existsClass(aNameOfTestClass)) {
 				log.error("No class modeled for " + aNameOfTestClass);
 				continue;
 			}
+			CtClass aTestModelCtClass = MutationSupporter.getFactory().Class().get(aNameOfTestClass);
+			// Object clazz = model.getClass(aNameOfTestClass);
 
 			List<String> testMethodsFromClass = runtimeinfo.passingCoveredTestCaseFromClass.get(aNameOfTestClass);
 
@@ -279,8 +285,8 @@ public class RtEngine extends AstorCoreEngine {
 
 			for (String aTestMethodFromClass : testMethodsFromClass) {
 
-				TestIntermediateAnalysisResult resultTestCase = processTest(aTestMethodFromClass, aNameOfTestClass,
-						aTestModelCtClass, runtimeinfo);
+				TestIntermediateAnalysisResult resultTestCase = processTest(model, aTestMethodFromClass,
+						aNameOfTestClass, aTestModelCtClass, runtimeinfo);
 				if (resultTestCase != null) {
 					resultByTest.add(resultTestCase);
 				}
@@ -291,12 +297,20 @@ public class RtEngine extends AstorCoreEngine {
 	public TestIntermediateAnalysisResult processSingleTest(RuntimeInformation runtimeinfo, String aNameOfTestClass,
 			String aTestMethodFromClass) {
 
+		return processSingleTest(getModel(), runtimeinfo, aNameOfTestClass, aTestMethodFromClass);
+	}
+
+	public TestIntermediateAnalysisResult processSingleTest(ProgramModel model, RuntimeInformation runtimeinfo,
+			String aNameOfTestClass, String aTestMethodFromClass) {
+
 		if (runtimeinfo.notexec.contains(aNameOfTestClass)) {
 			log.debug("Ignoring -not executed line- test: " + aNameOfTestClass);
 			return null;
 		}
 		log.info("*-*-*-*----- Analying TestClass: " + aNameOfTestClass);
 		CtClass aTestModelCtClass = MutationSupporter.getFactory().Class().get(aNameOfTestClass);
+		// model
+
 		if (aTestModelCtClass == null) {
 			log.error("No class modeled for " + aNameOfTestClass);
 			return null;
@@ -309,7 +323,7 @@ public class RtEngine extends AstorCoreEngine {
 			return null;
 		}
 
-		TestIntermediateAnalysisResult resultTestCase = processTest(aTestMethodFromClass, aNameOfTestClass,
+		TestIntermediateAnalysisResult resultTestCase = processTest(model, aTestMethodFromClass, aNameOfTestClass,
 				aTestModelCtClass, runtimeinfo);
 
 		return resultTestCase;
@@ -321,9 +335,9 @@ public class RtEngine extends AstorCoreEngine {
 
 	}
 
-	@SuppressWarnings("unchecked")
-	public TestIntermediateAnalysisResult processTest(String aTestMethodFromClass, String aNameOfTestClass,
-			CtClass aTestModelCtClass, RuntimeInformation runtimeinfo) {
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public TestIntermediateAnalysisResult processTest(ProgramModel model, String aTestMethodFromClass,
+			String aNameOfTestClass, CtClass aTestModelCtClass, RuntimeInformation runtimeinfo) {
 		log.info("**** Analying TestMethod: " + aTestMethodFromClass);
 
 		ResultMap<List<?>> partialStaticResults = new ResultMap<List<?>>();
@@ -351,7 +365,11 @@ public class RtEngine extends AstorCoreEngine {
 
 		}
 		// get all statements
-		List<CtStatement> allStmtsFromClass = testMethodModel.getElements(new LineFilter());
+		// List<CtStatement> allStmtsFromClass = testMethodModel.getElements(new
+		// LineFilter());
+
+		List<?> allStmtsFromClass = model.getStatementsFromMethod(testMethodModel);// testMethodModel.getElements(new
+																					// LineFilter());
 
 		for (ElementProcessor elementProcessor : this.elementProcessor) {
 
@@ -367,9 +385,8 @@ public class RtEngine extends AstorCoreEngine {
 
 			Classification<?> classif = elementProcessor.classifyElements(partialDynamicResults, aTestModelCtClass,
 					testMethodModel, runtimeinfo.mapCacheSuspicious, aTestModelCtClass, retrievedElements);
-			// if (classif != null) {
+
 			partialDynamicResults.put(elementProcessor.getClass().getSimpleName(), classif);
-			// }
 
 		}
 		/// Labelling
@@ -383,12 +400,40 @@ public class RtEngine extends AstorCoreEngine {
 			elementProcessor.labelTest(resultTestCase, retrievedElements, null, partialStaticResults,
 					partialDynamicResults);
 
-			elementProcessor.refactor(resultTestCase, retrievedElements, null, partialStaticResults,
-					partialDynamicResults);
+			// Refactor:
+			List<ProgramVariant> variants = elementProcessor.refactor(model, aTestModelCtClass, resultTestCase,
+					retrievedElements, null, partialStaticResults, partialDynamicResults);
+
+			for (ProgramVariant programVariant : variants) {
+
+				programVariant.setId(this.solutions.size());
+				try {
+					saveRtVariant(programVariant);
+					this.solutions.add(programVariant);
+				} catch (Exception e1) {
+					e1.printStackTrace();
+					log.error("Problems when saving variant " + programVariant.getId());
+				}
+
+			}
 
 		}
 
 		return resultTestCase;
+
+	}
+
+	private void saveRtVariant(ProgramVariant programVariant) throws Exception {
+		// int generation = 0;
+
+		for (OperatorInstance oi : programVariant.getAllOperations()) {
+			oi.applyModification();
+		}
+
+		this.saveVariant(programVariant);
+
+		// Finally, reverse the changes done by the child
+		reverseOperationInModel(programVariant, 1);
 
 	}
 
@@ -434,7 +479,6 @@ public class RtEngine extends AstorCoreEngine {
 	@Override
 	public void atEnd() {
 
-		super.atEnd();
 		JSonResultOriginal jsoncoverted = new JSonResultOriginal();
 		JsonObject json = null;
 		if (exceptionReceived == null) {
@@ -466,9 +510,6 @@ public class RtEngine extends AstorCoreEngine {
 		}
 	}
 
-	protected DynamicTestInformation dynamicInfo = null;
-	protected ProgramModel<?> model = null;
-
 	public DynamicTestInformation getDynamicInfo() {
 		return dynamicInfo;
 	}
@@ -477,11 +518,11 @@ public class RtEngine extends AstorCoreEngine {
 		this.dynamicInfo = dynamicInfo;
 	}
 
-	public ProgramModel<?> getModel() {
+	public ProgramModel getModel() {
 		return model;
 	}
 
-	public void setModel(ProgramModel<?> model) {
+	public void setModel(ProgramModel model) {
 		this.model = model;
 	}
 

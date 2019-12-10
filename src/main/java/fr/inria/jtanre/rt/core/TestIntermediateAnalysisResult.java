@@ -199,41 +199,7 @@ public class TestIntermediateAnalysisResult extends GenericTestAnalysisResults {
 		classifyIfComplex(this.getClassificationHelperCall().resultNotExecuted, notComplexHelperCallComplex,
 				resultNotExecutedHelperCallComplex);
 
-		//
-		// List<Helper> resultNotExecutedHelperCall =
-		// this.getClassificationHelperCall().getResultNotExecuted();
-		// List<Helper> resultNotExecutedHelperAssertion =
-		// this.getClassificationHelperAssertion().getResultNotExecuted();
-		// List<AsAssertion> resultNotExecutedAssertion =
-		// this.getClassificationAssert().getResultNotExecuted();
-
-//		// Skips
-//		if (allSkipFromTest2 != null && allSkipFromTest2.size() > 0) {
-//			List<Skip> skipss = new ArrayList<>();
-//			for (CtReturn aReturn : allSkipFromTest2) {
-//				Skip aSkip = new Skip(aReturn);
-//				aSkip.getNotExecutedTestElements().addAll(resultNotExecutedHelperCall);
-//				aSkip.getNotExecutedTestElements().addAll(resultNotExecutedAssertion);
-//
-//				skipss.add(aSkip);
-//
-//			}
-//			return new TestAnalysisResult(skipss);
-//		}
-
 		boolean smokeTest = isSmokeTest();
-
-//	ok	// checkTwoBranches(rAssert, rAssert, rHelperCall, rHelperAssertion);
-//	ok	// checkTwoBranches(rHelperCall, rAssert, rHelperCall, rHelperAssertion);
-//	ok	// checkTwoBranches(rHelperAssertion, rAssert, rHelperCall, rHelperAssertion);
-
-		//
-//	ok	classifyComplexHelper(notComplexHelperCallComplex, resultNotExecutedHelperCallComplex,
-//				resultNotExecutedHelperCall, false /* not assert, a call */);
-//	ok	classifyComplexHelper(notComplexHelperAssertComplex, resultNotExecutedHelperAssertComplex,
-//				resultNotExecutedHelperAssertion, true /* assert */);
-// ok classifyComplexAssert(notComplexAssertComplex,
-		// resultNotExecutedAssertComplex, resultNotExecutedAssertion);
 
 		// Executed
 		List<AsAssertion> allMissedFail = this.getAllMissedFailFromTest().getAll();

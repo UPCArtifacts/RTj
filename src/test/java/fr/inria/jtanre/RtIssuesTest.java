@@ -188,7 +188,8 @@ public class RtIssuesTest {
 
 		assertNotNull(aTestModelCtClass);
 
-		TestIntermediateAnalysisResult tresult = etEn.processTest("testNull", classNameOfTest, aTestModelCtClass, ri);
+		TestIntermediateAnalysisResult tresult = etEn.processTest(etEn.getModel(), "testNull", classNameOfTest,
+				aTestModelCtClass, ri);
 
 		assertNotNull(tresult);
 
@@ -228,8 +229,8 @@ public class RtIssuesTest {
 
 		assertNotNull(aTestModelCtClass);
 
-		TestIntermediateAnalysisResult tresult = etEn.processTest("testMultiThreadedTrie", classNameOfTest,
-				aTestModelCtClass, ri);
+		TestIntermediateAnalysisResult tresult = etEn.processTest(etEn.getModel(), "testMultiThreadedTrie",
+				classNameOfTest, aTestModelCtClass, ri);
 
 		assertNotNull(tresult);
 
@@ -269,7 +270,8 @@ public class RtIssuesTest {
 
 		assertNotNull(aTestModelCtClass);
 
-		TestIntermediateAnalysisResult tresult = etEn.processTest("testSet", classNameOfTest, aTestModelCtClass, ri);
+		TestIntermediateAnalysisResult tresult = etEn.processTest(etEn.getModel(), "testSet", classNameOfTest,
+				aTestModelCtClass, ri);
 
 		assertNotNull(tresult);
 
@@ -327,7 +329,7 @@ public class RtIssuesTest {
 		CtClass aTestModelCtClass = MutationSupporter.getFactory().Class().get(classNameOfTest);
 
 		assertNotNull(aTestModelCtClass);
-		TestIntermediateAnalysisResult tresult = etEn.processTest("testCuePointOrder", classNameOfTest,
+		TestIntermediateAnalysisResult tresult = etEn.processTest(etEn.getModel(), "testCuePointOrder", classNameOfTest,
 				aTestModelCtClass, ri);
 
 		assertNotNull(tresult);
@@ -371,8 +373,8 @@ public class RtIssuesTest {
 		CtClass aTestModelCtClass = MutationSupporter.getFactory().Class().get(classNameOfTest);
 
 		assertNotNull(aTestModelCtClass);
-		TestIntermediateAnalysisResult tresult = etEn.processTest("testEmptyClass", classNameOfTest, aTestModelCtClass,
-				ri);
+		TestIntermediateAnalysisResult tresult = etEn.processTest(etEn.getModel(), "testEmptyClass", classNameOfTest,
+				aTestModelCtClass, ri);
 
 		assertNotNull(tresult);
 

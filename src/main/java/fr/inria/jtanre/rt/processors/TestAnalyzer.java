@@ -7,6 +7,7 @@ import fr.inria.astor.core.entities.ProgramVariant;
 import fr.inria.astor.core.faultlocalization.entity.SuspiciousCode;
 import fr.inria.jtanre.rt.core.Classification;
 import fr.inria.jtanre.rt.core.GenericTestAnalysisResults;
+import fr.inria.jtanre.rt.core.ProgramModel;
 import fr.inria.jtanre.rt.core.ResultMap;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.declaration.CtClass;
@@ -17,18 +18,19 @@ import spoon.reflect.declaration.CtExecutable;
  * @author Matias Martinez
  *
  */
-public interface TestAnalyzer<T, C> {
+public interface TestAnalyzer<T, C, MC> {
 
 	public List<T> findElements(Map<String, List<?>> previousPartialResults, List<CtStatement> stmts,
 			CtExecutable testMethodModel, List<CtClass> allClasses);
 
-	public Classification<C> classifyElements(ResultMap<Classification<?>> previousDynamic, CtClass testClassdModel,
-			CtExecutable testMethodModel, Map<String, SuspiciousCode> mapCacheSuspicious, CtStatement stmts,
-			List<T> retrievedElementsFromStatic);
+	public Classification<C> classifyElements(ResultMap<Classification<?>> previousDynamic,
+			/* CtClass */MC testClassdModel, CtExecutable testMethodModel,
+			Map<String, SuspiciousCode> mapCacheSuspicious, CtStatement stmts, List<T> retrievedElementsFromStatic);
 
 	public void labelTest(GenericTestAnalysisResults analysisResult, List<T> staticAnalysis, Classification<C> dynamic,
 			ResultMap<List<?>> statics, ResultMap<Classification<?>> dynamics);
 
-	public List<ProgramVariant> refactor(GenericTestAnalysisResults analysisResult, List<T> staticAnalysis,
-			Classification<C> dynamic, ResultMap<List<?>> statics, ResultMap<Classification<?>> dynamics);
+	public List<ProgramVariant> refactor(ProgramModel model, CtClass aTestModelCtClass,
+			GenericTestAnalysisResults analysisResult, List<T> staticAnalysis, Classification<C> dynamic,
+			ResultMap<List<?>> statics, ResultMap<Classification<?>> dynamics);
 }

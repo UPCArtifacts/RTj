@@ -5,11 +5,21 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import fr.inria.astor.approaches.jgenprog.operators.InsertBeforeOp;
+import fr.inria.astor.approaches.jgenprog.operators.ReplaceOp;
+import fr.inria.astor.core.entities.ModificationPoint;
+import fr.inria.astor.core.entities.OperatorInstance;
+import fr.inria.astor.core.entities.ProgramVariant;
+import fr.inria.astor.core.entities.StatementOperatorInstance;
 import fr.inria.astor.core.faultlocalization.entity.SuspiciousCode;
+import fr.inria.astor.core.manipulation.MutationSupporter;
 import fr.inria.jtanre.rt.core.Classification;
 import fr.inria.jtanre.rt.core.GenericTestAnalysisResults;
+import fr.inria.jtanre.rt.core.ProgramModel;
 import fr.inria.jtanre.rt.core.ResultMap;
 import fr.inria.jtanre.rt.elements.AsAssertion;
+import spoon.reflect.code.CtComment;
+import spoon.reflect.code.CtComment.CommentType;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.declaration.CtClass;
@@ -90,8 +100,41 @@ public class MissedFailProcessor extends AssertionProcessor {
 	@Override
 	public void labelTest(GenericTestAnalysisResults analysisResult, List<CtInvocation> staticAnalysis,
 			Classification<AsAssertion> dynamic, ResultMap<List<?>> statics, ResultMap<Classification<?>> dynamics) {
-		// TODO Auto-generated method stub
 		super.labelTest(analysisResult, staticAnalysis, dynamic, statics, dynamics);
+	}
+
+	@Override
+	public List<ProgramVariant> refactor(ProgramModel model, CtClass aTestModelCtClass,
+			GenericTestAnalysisResults analysisResult, List<CtInvocation> staticAnalysis,
+			Classification<AsAssertion> dynamic, ResultMap<List<?>> statics, ResultMap<Classification<?>> dynamics) {
+
+		List<ProgramVariant> res = new ArrayList<>();
+		for (CtInvocation inv : staticAnalysis) {
+
+			ProgramVariant pv = new ProgramVariant();
+			pv.getBuiltClasses().put(aTestModelCtClass.getQualifiedName(), aTestModelCtClass);
+			ModificationPoint mp = new ModificationPoint();
+			mp.setCodeElement(inv);
+			mp.setProgramVariant(pv);
+			mp.setCtClass(aTestModelCtClass);
+			pv.getModificationPoints().add(mp);
+
+			///
+			CtComment comment = MutationSupporter.getFactory().createComment(
+					"TODO: Rotten Refactored:\n" + inv.toString() + "\nProposed refactor:\n", CommentType.BLOCK);
+			CtStatement fail = MutationSupporter.getFactory().createCodeSnippetStatement("org.junit.Assert.fail()");
+			InsertBeforeOp insertBefore = new InsertBeforeOp();
+			OperatorInstance commentOpInstance = new StatementOperatorInstance(mp, insertBefore, inv, comment);
+			//
+			ReplaceOp rep = new ReplaceOp();
+
+			OperatorInstance replaceMissingOpInstance = new StatementOperatorInstance(mp, rep, inv, fail);
+
+			pv.getOperations(1).add(commentOpInstance);
+			pv.getOperations(1).add(replaceMissingOpInstance);
+			res.add(pv);
+		}
+		return res;
 	}
 
 }

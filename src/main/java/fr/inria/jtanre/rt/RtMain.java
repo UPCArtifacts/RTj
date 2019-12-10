@@ -34,12 +34,12 @@ public class RtMain extends AstorMain {
 		// Execution:
 
 		// Model creation
-		ProgramModel<?> model = ((RtEngine) rtCore).createModel();
+		ProgramModel model = ((RtEngine) rtCore).createModel();
 
 		// Loading extension Points
 		DynamicTestInformation dynamicInfo = ((RtEngine) rtCore).runTests();
 
-		ConfigurationProperties.print();
+		// ConfigurationProperties.print();
 
 		((RtEngine) rtCore).runTestAnalyzers(model, dynamicInfo);
 

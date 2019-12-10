@@ -410,8 +410,8 @@ public class RtTest {
 
 		assertNotNull(aTestModelCtClass);
 
-		TestIntermediateAnalysisResult tresult = etEn.processTest("testNormalizedKeysEqualsFullLength", classNameOfTest,
-				aTestModelCtClass, ri);
+		TestIntermediateAnalysisResult tresult = etEn.processTest(etEn.getModel(), "testNormalizedKeysEqualsFullLength",
+				classNameOfTest, aTestModelCtClass, ri);
 
 		assertNotNull(tresult);
 

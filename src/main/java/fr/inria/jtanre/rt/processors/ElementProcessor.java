@@ -12,6 +12,7 @@ import fr.inria.astor.core.faultlocalization.entity.SuspiciousCode;
 import fr.inria.astor.core.faultlocalization.gzoltar.TestCaseResult;
 import fr.inria.jtanre.rt.core.Classification;
 import fr.inria.jtanre.rt.core.GenericTestAnalysisResults;
+import fr.inria.jtanre.rt.core.ProgramModel;
 import fr.inria.jtanre.rt.core.ResultMap;
 import fr.inria.jtanre.rt.elements.AsAssertion;
 import fr.inria.jtanre.rt.elements.Helper;
@@ -35,7 +36,7 @@ import spoon.reflect.visitor.filter.LineFilter;
  *
  * @param <T>
  */
-public abstract class ElementProcessor<T, C> implements TestAnalyzer<T, C> {
+public abstract class ElementProcessor<T, C> implements TestAnalyzer<T, C, CtClass> {
 	protected static Logger log = Logger.getLogger(Thread.currentThread().getName());
 
 	protected static final String ASSUME = "assume";
@@ -45,9 +46,10 @@ public abstract class ElementProcessor<T, C> implements TestAnalyzer<T, C> {
 	protected static final String ASSERT = "assert";
 
 	@Override
-	public List<ProgramVariant> refactor(GenericTestAnalysisResults analysisResult, List<T> staticAnalysis,
-			Classification<C> dynamic, ResultMap<List<?>> statics, ResultMap<Classification<?>> dynamics) {
-		return null;
+	public List<ProgramVariant> refactor(ProgramModel model, CtClass aTestModelCtClass,
+			GenericTestAnalysisResults analysisResult, List<T> staticAnalysis, Classification<C> dynamic,
+			ResultMap<List<?>> statics, ResultMap<Classification<?>> dynamics) {
+		return Collections.EMPTY_LIST;
 	};
 
 	protected List<CtInvocation> filterInvocation(List<CtStatement> allStmtsFromClass, String filterName) {

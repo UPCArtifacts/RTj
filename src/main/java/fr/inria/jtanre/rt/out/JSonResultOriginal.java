@@ -18,6 +18,7 @@ import com.google.gson.JsonObject;
 import fr.inria.astor.core.manipulation.MutationSupporter;
 import fr.inria.astor.core.setup.ConfigurationProperties;
 import fr.inria.astor.core.setup.ProjectRepairFacade;
+import fr.inria.jtanre.rt.core.GenericTestAnalysisResults;
 import fr.inria.jtanre.rt.core.TestAnalysisResult;
 import fr.inria.jtanre.rt.core.TestIntermediateAnalysisResult;
 import fr.inria.jtanre.rt.elements.AsAssertion;
@@ -113,8 +114,9 @@ public class JSonResultOriginal {
 		JsonArray testsArray = new JsonArray();
 		root.add("tests", testsArray);
 		Set<String> rTestclasses = new HashSet<>();
-		for (TestIntermediateAnalysisResult tr : resultByTest) {
+		for (GenericTestAnalysisResults gr : resultByTest) {
 
+			TestIntermediateAnalysisResult tr = (TestIntermediateAnalysisResult) gr;
 			TestAnalysisResult resultClassification = tr.generateFinalResult();
 
 			JsonObject testjson = new JsonObject();
