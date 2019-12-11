@@ -112,12 +112,14 @@ public class MissedFailProcessor extends AssertionProcessor {
 		for (CtInvocation inv : staticAnalysis) {
 
 			ProgramVariant pv = new ProgramVariant();
-			pv.getBuiltClasses().put(aTestModelCtClass.getQualifiedName(), aTestModelCtClass);
+			// Creation of the modif point ()
 			ModificationPoint mp = new ModificationPoint();
 			mp.setCodeElement(inv);
 			mp.setProgramVariant(pv);
 			mp.setCtClass(aTestModelCtClass);
 			pv.getModificationPoints().add(mp);
+			// Add the class affected to the program variant
+			pv.getBuiltClasses().put(aTestModelCtClass.getQualifiedName(), aTestModelCtClass);
 
 			///
 			CtComment comment = MutationSupporter.getFactory().createComment(

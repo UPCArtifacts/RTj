@@ -13,7 +13,6 @@ import java.util.Optional;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
-import com.martiansoftware.jsap.JSAPException;
 
 import fr.inria.astor.core.entities.OperatorInstance;
 import fr.inria.astor.core.entities.ProgramVariant;
@@ -33,11 +32,11 @@ import fr.inria.jtanre.rt.core.SpoonProgramModel;
 import fr.inria.jtanre.rt.core.TestIntermediateAnalysisResult;
 import fr.inria.jtanre.rt.elements.AsAssertion;
 import fr.inria.jtanre.rt.out.JSonResultOriginal;
+import fr.inria.jtanre.rt.out.PrinterOutResultOriginal;
 import fr.inria.jtanre.rt.processors.AnyStatementExecuted;
 import fr.inria.jtanre.rt.processors.AssertionProcessor;
 import fr.inria.jtanre.rt.processors.AssumeProcessor;
 import fr.inria.jtanre.rt.processors.ControlFlowProcessor;
-import fr.inria.jtanre.rt.processors.ElementProcessor;
 import fr.inria.jtanre.rt.processors.ExpectedExceptionAnnotatedProcessor;
 import fr.inria.jtanre.rt.processors.ExpectedExceptionProcessor;
 import fr.inria.jtanre.rt.processors.FailProcessor;
@@ -48,6 +47,8 @@ import fr.inria.jtanre.rt.processors.OtherInvocationsProcessor;
 import fr.inria.jtanre.rt.processors.RedundantAssertionProcessor;
 import fr.inria.jtanre.rt.processors.SkipProcessor;
 import fr.inria.jtanre.rt.processors.SmokeProcessor;
+import fr.inria.jtanre.rt.processors.TestAnalyzer;
+import fr.inria.main.evolution.PlugInLoader;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.declaration.CtType;
@@ -67,12 +68,12 @@ public class RtEngine extends AstorCoreEngine {
 	List<String> namespace = Arrays.asList("org.assertj", "org.testng", "org.mockito", "org.spockframework",
 			"org.junit", "cucumber", "org.jbehave");
 
-	List<ElementProcessor<?, ?>> elementProcessor = new ArrayList<>();
+	List<TestAnalyzer> elementProcessor = new ArrayList<>();
 
 	protected DynamicTestInformation dynamicInfo = null;
 	protected ProgramModel model = null;
 
-	public RtEngine(MutationSupporter mutatorExecutor, ProjectRepairFacade projFacade) throws JSAPException {
+	public RtEngine(MutationSupporter mutatorExecutor, ProjectRepairFacade projFacade) throws Exception {
 		super(mutatorExecutor, projFacade);
 
 		ConfigurationProperties.setProperty("canhavezerosusp", "true");
@@ -85,7 +86,8 @@ public class RtEngine extends AstorCoreEngine {
 		ConfigurationProperties.setProperty("onlympcovered", "false");
 		ConfigurationProperties.setProperty("onlympfromtest", "false");
 		ConfigurationProperties.setProperty("maxGeneration", "1");
-		ConfigurationProperties.setProperty("maxsuspcandidates", "100000000");
+		ConfigurationProperties.setProperty("maxmodificationpoints", "1000000000");
+		ConfigurationProperties.setProperty("maxsuspcandidates", "1000000000");
 
 		elementProcessor.add(new AssertionProcessor());
 		elementProcessor.add(new HelperCallProcessor());
@@ -103,6 +105,16 @@ public class RtEngine extends AstorCoreEngine {
 		elementProcessor.add(new SmokeProcessor());
 		elementProcessor.add(new ControlFlowProcessor());
 		elementProcessor.add(new AnyStatementExecuted());
+
+		String analyzers = ConfigurationProperties.getProperty("analyzers");
+		if (analyzers != null && !analyzers.isEmpty()) {
+			String[] operators = analyzers.split(File.pathSeparator);
+			for (String op : operators) {
+				TestAnalyzer aop = (TestAnalyzer) PlugInLoader.loadPlugin(op, TestAnalyzer.class);
+				if (aop != null)
+					elementProcessor.add(aop);
+			}
+		}
 
 	}
 
@@ -371,7 +383,7 @@ public class RtEngine extends AstorCoreEngine {
 		List<?> allStmtsFromClass = model.getStatementsFromMethod(testMethodModel);// testMethodModel.getElements(new
 																					// LineFilter());
 
-		for (ElementProcessor elementProcessor : this.elementProcessor) {
+		for (TestAnalyzer elementProcessor : this.elementProcessor) {
 
 			List<?> retrievedElements = elementProcessor.findElements(partialStaticResults, allStmtsFromClass,
 					testMethodModel, allClasses);
@@ -379,7 +391,7 @@ public class RtEngine extends AstorCoreEngine {
 		}
 
 		// CLassification
-		for (ElementProcessor elementProcessor : this.elementProcessor) {
+		for (TestAnalyzer elementProcessor : this.elementProcessor) {
 
 			List<?> retrievedElements = partialStaticResults.get(elementProcessor.getClass().getSimpleName());
 
@@ -392,7 +404,7 @@ public class RtEngine extends AstorCoreEngine {
 		/// Labelling
 
 		// CLassification
-		for (ElementProcessor elementProcessor : this.elementProcessor) {
+		for (TestAnalyzer elementProcessor : this.elementProcessor) {
 
 			List<?> retrievedElements = partialStaticResults.get(elementProcessor.getClass());
 			Classification<?> classif = partialDynamicResults.get(elementProcessor.getClass());
@@ -508,6 +520,11 @@ public class RtEngine extends AstorCoreEngine {
 			e.printStackTrace();
 			log.error(e);
 		}
+
+		PrinterOutResultOriginal outsyso = new PrinterOutResultOriginal();
+		outsyso.toJson(ConfigurationProperties.getProperty("id"), this.projectFacade, this.resultByTest);
+		System.out.println("Detailed results saved on file: " + outpath);
+
 	}
 
 	public DynamicTestInformation getDynamicInfo() {

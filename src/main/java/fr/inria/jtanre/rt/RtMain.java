@@ -1,5 +1,7 @@
 package fr.inria.jtanre.rt;
 
+import org.apache.commons.cli.CommandLine;
+
 import fr.inria.astor.core.manipulation.MutationSupporter;
 import fr.inria.astor.core.setup.ConfigurationProperties;
 import fr.inria.jtanre.rt.core.DynamicTestInformation;
@@ -12,6 +14,10 @@ import fr.inria.main.evolution.AstorMain;
  *
  */
 public class RtMain extends AstorMain {
+
+	static {
+		options.addOption("analyzers", true, "Add new analyzer");
+	}
 
 	@Override
 	public void run(String location, String projectName, String dependencies, String packageToInstrument, double thfl,
@@ -39,14 +45,19 @@ public class RtMain extends AstorMain {
 		// Loading extension Points
 		DynamicTestInformation dynamicInfo = ((RtEngine) rtCore).runTests();
 
-		// ConfigurationProperties.print();
-
 		((RtEngine) rtCore).runTestAnalyzers(model, dynamicInfo);
 
 		((RtEngine) rtCore).atEnd();
 
 		long endT = System.currentTimeMillis();
-		log.info("Time Total(s): " + (endT - startT) / 1000d);
+		System.out.println("Execution Time (s): " + (endT - startT) / 1000d);
+	}
+
+	@Override
+	public void processOtherCommands(CommandLine cmd) {
+		if (cmd.hasOption("analyzers")) {
+			ConfigurationProperties.properties.setProperty("analyzers", cmd.getOptionValue("analyzers"));
+		}
 	}
 
 }

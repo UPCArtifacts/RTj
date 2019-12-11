@@ -5,6 +5,7 @@ import java.util.Map;
 
 import fr.inria.astor.core.entities.ProgramVariant;
 import fr.inria.astor.core.faultlocalization.entity.SuspiciousCode;
+import fr.inria.astor.core.solutionsearch.extension.AstorExtensionPoint;
 import fr.inria.jtanre.rt.core.Classification;
 import fr.inria.jtanre.rt.core.GenericTestAnalysisResults;
 import fr.inria.jtanre.rt.core.ProgramModel;
@@ -18,7 +19,7 @@ import spoon.reflect.declaration.CtExecutable;
  * @author Matias Martinez
  *
  */
-public interface TestAnalyzer<T, C, MC> {
+public interface TestAnalyzer<T, C, MC> extends AstorExtensionPoint {
 
 	public List<T> findElements(Map<String, List<?>> previousPartialResults, List<CtStatement> stmts,
 			CtExecutable testMethodModel, List<CtClass> allClasses);
