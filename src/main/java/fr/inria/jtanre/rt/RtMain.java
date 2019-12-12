@@ -16,7 +16,8 @@ import fr.inria.main.evolution.AstorMain;
 public class RtMain extends AstorMain {
 
 	static {
-		options.addOption("analyzers", true, "Add new analyzer");
+		options.addOption("analyzers", true, "Adds new analyzers");
+		options.addOption("printrottentest", false, "Prints the information of the rotten green test found");
 	}
 
 	@Override
@@ -50,13 +51,17 @@ public class RtMain extends AstorMain {
 		((RtEngine) rtCore).atEnd();
 
 		long endT = System.currentTimeMillis();
-		System.out.println("Execution Time (s): " + (endT - startT) / 1000d);
+		System.out.println("Execution Time: " + ((endT - startT) / 1000d) + " seconds");
 	}
 
 	@Override
 	public void processOtherCommands(CommandLine cmd) {
 		if (cmd.hasOption("analyzers")) {
 			ConfigurationProperties.properties.setProperty("analyzers", cmd.getOptionValue("analyzers"));
+		}
+
+		if (cmd.hasOption("printrottentest")) {
+			ConfigurationProperties.properties.setProperty("printrottentest", "true");
 		}
 	}
 

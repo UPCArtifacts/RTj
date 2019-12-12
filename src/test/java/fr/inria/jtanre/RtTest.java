@@ -14,6 +14,7 @@ import org.junit.Test;
 import fr.inria.astor.core.manipulation.MutationSupporter;
 import fr.inria.astor.core.setup.ConfigurationProperties;
 import fr.inria.jtanre.rt.RtEngine;
+import fr.inria.jtanre.rt.RtMain;
 import fr.inria.jtanre.rt.core.RuntimeInformation;
 import fr.inria.jtanre.rt.core.TestIntermediateAnalysisResult;
 import fr.inria.main.CommandSummary;
@@ -152,7 +153,7 @@ public class RtTest {
 	}
 
 	public static RtEngine detectRt(File location, String dep, String name, String subproject) throws Exception {
-		AstorMain main1 = new AstorMain();
+		RtMain main1 = new RtMain();
 
 		CommandSummary cs = getCommand(location, dep, name, subproject);
 
@@ -195,8 +196,8 @@ public class RtTest {
 		} else {
 			cs.command.put("-dependencies", dep);
 		}
-		cs.command.put("-mode", "custom");
-		cs.command.put("-customengine", RtEngine.class.getCanonicalName());
+		cs.command.put("-mode", "rt");
+		// cs.command.put("-customengine", RtEngine.class.getCanonicalName());
 		cs.command.put("-parameters",
 				"canhavezerosusp:true:runonoriginalbin:true:continuewhenmodelfail:true" + ":mvndir:/usr/local/bin/mvn"
 						+ ((name != null) ? ":id:" + name : "")

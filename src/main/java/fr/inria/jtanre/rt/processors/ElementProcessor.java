@@ -194,58 +194,79 @@ public abstract class ElementProcessor<T, C> implements TestAnalyzer<T, C, CtCla
 			Classification<Helper> rHelperAssertion) {
 
 		for (TestElement target : elementsToClassify.resultNotExecuted) {
-
+			// TODO: refactor
 			CtElement invocation = (target instanceof Helper && ((Helper) target).unexecutedAssert)
 					? ((Helper) target).getAssertion().getElement()
 					: target.getElement();
-			CtIf parentif = null;
-			boolean inThen = false;
-			// Let's retrieve the parent if (I dont use getParent because I want the
-			// Immediate parent)
-			if (invocation.getParent() instanceof CtIf) {
-				parentif = (CtIf) invocation.getParent();
-				inThen = invocation.getRoleInParent().equals(CtRole.THEN);
+			boolean exist = findTwoBranches(rAssertions, rHelperAssertion, invocation);
+			if (exist) {
+				target.setFp(true);
 			} else {
-
-				if (invocation.getParent() instanceof CtBlock
-						&& (invocation.getParent().getRoleInParent().equals(CtRole.THEN)
-								|| invocation.getParent().getRoleInParent().equals(CtRole.ELSE))) {
-
-					parentif = (CtIf) invocation.getParent().getParent();
-					inThen = invocation.getParent().getRoleInParent().equals(CtRole.THEN);
-				}
-			}
-			//
-			if (parentif != null) {
-				CtStatement toAnalyze = inThen ? parentif.getElseStatement() : parentif.getThenStatement();
-
-				// other statements in the other branch
-				List<CtStatement> stms = (toAnalyze instanceof CtBlock) ? ((CtBlock) toAnalyze).getStatements()
-						: Collections.singletonList(toAnalyze);
-
-				// let's check if exist
-
-				for (CtStatement anStatement : stms) {
-					// let's check if the other branch has executed assertions/helpers
-					boolean exist = rAssertions.getResultExecuted().stream().filter(e -> e.getElement() == anStatement)
-							.findFirst().isPresent();
-
-					// Assertion executed by a helper
-					exist = exist || rHelperAssertion.getResultExecuted().stream()
-							.filter(e -> e.getAssertion().getCtAssertion() == anStatement).findFirst().isPresent();
-
-					exist = exist || checkStatementInCallStack(rHelperAssertion, anStatement);
-
-					if (exist) {
-						target.setFp(true);
-						log.debug("Found executed in the other branch");
-						break;
+				if (target instanceof Helper) {
+					Helper helper = (Helper) target;
+					// For each call done, check if it's in a branch
+					for (CtInvocation call : helper.getCalls()) {
+						exist = findTwoBranches(rAssertions, rHelperAssertion, call);
+						if (exist) {
+							target.setFp(true);
+							break;
+						}
 					}
 				}
-
 			}
 		}
 
+	}
+
+	private boolean findTwoBranches(Classification<? extends TestElement> rAssertions,
+			Classification<Helper> rHelperAssertion, CtElement invocation) {
+		CtIf parentif = null;
+		boolean inThen = false;
+		// Let's retrieve the parent if (I dont use getParent because I want the
+		// Immediate parent)
+		if (invocation.getParent() instanceof CtIf) {
+			parentif = (CtIf) invocation.getParent();
+			inThen = invocation.getRoleInParent().equals(CtRole.THEN);
+		} else {
+
+			if (invocation.getParent() instanceof CtBlock
+					&& (invocation.getParent().getRoleInParent().equals(CtRole.THEN)
+							|| invocation.getParent().getRoleInParent().equals(CtRole.ELSE))) {
+
+				parentif = (CtIf) invocation.getParent().getParent();
+				inThen = invocation.getParent().getRoleInParent().equals(CtRole.THEN);
+			}
+		}
+		//
+		if (parentif != null) {
+			CtStatement toAnalyze = inThen ? parentif.getElseStatement() : parentif.getThenStatement();
+
+			// other statements in the other branch
+			List<CtStatement> stms = (toAnalyze instanceof CtBlock) ? ((CtBlock) toAnalyze).getStatements()
+					: Collections.singletonList(toAnalyze);
+
+			// let's check if exist
+
+			for (CtStatement anStatement : stms) {
+				// let's check if the other branch has executed assertions/helpers
+				boolean exist = rAssertions.getResultExecuted().stream().filter(e -> e.getElement() == anStatement)
+						.findFirst().isPresent();
+
+				// Assertion executed by a helper
+				exist = exist || rHelperAssertion.getResultExecuted().stream()
+						.filter(e -> e.getAssertion().getCtAssertion() == anStatement).findFirst().isPresent();
+
+				exist = exist || checkStatementInCallStack(rHelperAssertion, anStatement);
+
+				if (exist) {
+					log.debug("Found executed in the other branch");
+
+					return true;
+				}
+			}
+
+		}
+		return false;
 	}
 
 	private boolean checkStatementInCallStack(Classification<Helper> rHelperAssertion, CtStatement anStatement) {

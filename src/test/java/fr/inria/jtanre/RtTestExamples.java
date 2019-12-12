@@ -1505,6 +1505,201 @@ public class RtTestExamples {
 	}
 
 	@Test
+	public void testRTFRow29_test4() throws Exception {
+		RtEngine etEn = detectRtSkip();
+
+		List<TestIntermediateAnalysisResult> resultByTest = etEn.getResultByTest();
+		assertNotNull(resultByTest);
+
+		RuntimeInformation dynInf = etEn.computeDynamicInformation();
+
+		//// 4th case
+		TestIntermediateAnalysisResult rottenTest4 = etEn.processSingleTest(dynInf,
+				"RottenTestsFinder.FakePaperTests.RTFRow29Context", "test4");
+
+		assertNotNull(rottenTest4);
+
+		assertFalse(rottenTest4.isSmokeTest());
+
+		assertTrue(rottenTest4.getClassificationHelperAssertion().getResultNotExecuted().size() > 0);
+
+		assertTrue(rottenTest4.isRotten());
+
+		TestAnalysisResult finalResult = rottenTest4.generateFinalResult();
+
+		assertTrue(finalResult.fullRottenHelperAssert.isEmpty());
+		// here the assert that focuses on this test4
+		assertTrue(finalResult.contextHelperAssertion.size() > 0);
+
+		Helper helper = finalResult.contextHelperAssertion.get(0);
+		assertEquals(2, helper.getCalls().size());
+		assertTrue(helper.isFp());
+
+		assertTrue(finalResult.fullRottenAssert.isEmpty());
+		assertTrue(finalResult.contextAssertion.isEmpty());
+
+		assertTrue(finalResult.contextHelperCall.isEmpty());
+		assertTrue(finalResult.fullRottenHelperCall.isEmpty());
+
+	}
+
+	@Test
+	public void testRTFRow29_test5() throws Exception {
+		RtEngine etEn = detectRtSkip();
+
+		List<TestIntermediateAnalysisResult> resultByTest = etEn.getResultByTest();
+		assertNotNull(resultByTest);
+
+		RuntimeInformation dynInf = etEn.computeDynamicInformation();
+
+		//// 4th case
+		TestIntermediateAnalysisResult rottenTest4 = etEn.processSingleTest(dynInf,
+				"RottenTestsFinder.FakePaperTests.RTFRow29Context", "test5");
+
+		assertNotNull(rottenTest4);
+
+		assertFalse(rottenTest4.isSmokeTest());
+
+		assertTrue(rottenTest4.getClassificationHelperAssertion().getResultNotExecuted().size() > 0);
+
+		assertTrue(rottenTest4.isRotten());
+
+		TestAnalysisResult finalResult = rottenTest4.generateFinalResult();
+
+		assertTrue(finalResult.fullRottenHelperAssert.isEmpty());
+		// here the assert that focuses on this test4
+		assertTrue(finalResult.contextHelperAssertion.size() > 0);
+
+		Helper helper = finalResult.contextHelperAssertion.get(0);
+		assertEquals(1, helper.getCalls().size());
+		assertTrue(helper.isFp());
+
+		assertTrue(finalResult.fullRottenAssert.isEmpty());
+		assertTrue(finalResult.contextAssertion.isEmpty());
+
+		assertTrue(finalResult.contextHelperCall.isEmpty());
+		assertTrue(finalResult.fullRottenHelperCall.isEmpty());
+
+	}
+
+	@Test
+	public void testRTFRow29_test6() throws Exception {
+		RtEngine etEn = detectRtSkip();
+
+		List<TestIntermediateAnalysisResult> resultByTest = etEn.getResultByTest();
+		assertNotNull(resultByTest);
+
+		RuntimeInformation dynInf = etEn.computeDynamicInformation();
+
+		//// 4th case
+		TestIntermediateAnalysisResult rottenTest4 = etEn.processSingleTest(dynInf,
+				"RottenTestsFinder.FakePaperTests.RTFRow29Context", "test6");
+
+		assertNotNull(rottenTest4);
+
+		assertFalse(rottenTest4.isSmokeTest());
+
+		assertTrue(rottenTest4.getClassificationHelperAssertion().getResultNotExecuted().size() > 0);
+
+		assertTrue(rottenTest4.isRotten());
+
+		TestAnalysisResult finalResult = rottenTest4.generateFinalResult();
+
+		assertTrue(finalResult.fullRottenHelperAssert.isEmpty());
+		// here the assert that focuses on this test4
+		assertTrue(finalResult.contextHelperAssertion.size() > 0);
+
+		Helper helper = finalResult.contextHelperAssertion.get(0);
+		assertEquals(1, helper.getCalls().size());
+		assertTrue(helper.isFp());
+
+		assertTrue(finalResult.fullRottenAssert.isEmpty());
+		assertTrue(finalResult.contextAssertion.isEmpty());
+
+		assertTrue(finalResult.contextHelperCall.isEmpty());
+		assertTrue(finalResult.fullRottenHelperCall.isEmpty());
+
+	}
+
+	@Test
+	public void testRTFRow29_test7() throws Exception {
+		RtEngine etEn = detectRtSkip();
+
+		List<TestIntermediateAnalysisResult> resultByTest = etEn.getResultByTest();
+		assertNotNull(resultByTest);
+
+		RuntimeInformation dynInf = etEn.computeDynamicInformation();
+
+		//// 4th case
+		TestIntermediateAnalysisResult rottenTest4 = etEn.processSingleTest(dynInf,
+				"RottenTestsFinder.FakePaperTests.RTFRow29Context", "test7");
+
+		assertNotNull(rottenTest4);
+
+		assertFalse(rottenTest4.isSmokeTest());
+
+		assertTrue(rottenTest4.getClassificationHelperAssertion().getResultNotExecuted().size() > 0);
+
+		assertTrue(rottenTest4.isRotten());
+
+		TestAnalysisResult finalResult = rottenTest4.generateFinalResult();
+
+		assertTrue(finalResult.fullRottenHelperAssert.isEmpty());
+		// here the assert that focuses on this test4
+		assertTrue(finalResult.contextHelperAssertion.size() > 0);
+
+		Helper helper = finalResult.contextHelperAssertion.get(0);
+		assertEquals(1, helper.getCalls().size());
+		assertFalse(helper.isFp());
+
+		assertTrue(finalResult.fullRottenAssert.isEmpty());
+		assertTrue(finalResult.contextAssertion.isEmpty());
+
+		assertTrue(finalResult.contextHelperCall.isEmpty());
+		assertTrue(finalResult.fullRottenHelperCall.isEmpty());
+
+	}
+
+	@Test
+	public void testRTFRow29_test8() throws Exception {
+		RtEngine etEn = detectRtSkip();
+
+		List<TestIntermediateAnalysisResult> resultByTest = etEn.getResultByTest();
+		assertNotNull(resultByTest);
+
+		RuntimeInformation dynInf = etEn.computeDynamicInformation();
+
+		//// 4th case
+		TestIntermediateAnalysisResult rottenTest4 = etEn.processSingleTest(dynInf,
+				"RottenTestsFinder.FakePaperTests.RTFRow29Context", "test8");
+
+		assertNotNull(rottenTest4);
+
+		assertFalse(rottenTest4.isSmokeTest());
+
+		assertTrue(rottenTest4.getClassificationHelperAssertion().getResultNotExecuted().size() > 0);
+
+		assertTrue(rottenTest4.isRotten());
+
+		TestAnalysisResult finalResult = rottenTest4.generateFinalResult();
+
+		assertTrue(finalResult.fullRottenHelperAssert.isEmpty());
+		// here the assert that focuses on this test4
+		assertTrue(finalResult.contextHelperAssertion.size() > 0);
+
+		Helper helper = finalResult.contextHelperAssertion.get(0);
+		assertEquals(2, helper.getCalls().size());
+		assertFalse(helper.isFp());
+
+		assertTrue(finalResult.fullRottenAssert.isEmpty());
+		assertTrue(finalResult.contextAssertion.isEmpty());
+
+		assertTrue(finalResult.contextHelperCall.isEmpty());
+		assertTrue(finalResult.fullRottenHelperCall.isEmpty());
+
+	}
+
+	@Test
 	public void testRTFRow30Skip() throws Exception {
 		RtEngine etEn = detectRtSkip();
 
@@ -1720,6 +1915,7 @@ public class RtTestExamples {
 		cs.command.put("-loglevel", "DEBUG");
 		cs.command.put("-location", new File("./examples/rt-project/").getAbsolutePath());
 		cs.command.put("-mode", "rt");
+		cs.command.put("-printrottentest", "true");
 
 		main1.execute(cs.flat());
 		RtEngine etEn = (RtEngine) main1.getEngine();

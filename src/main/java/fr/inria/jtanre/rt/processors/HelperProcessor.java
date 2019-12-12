@@ -154,17 +154,44 @@ public abstract class HelperProcessor extends ElementProcessor<Helper, Helper> {
 	protected void classifyComplexHelper(List<Helper> resultNotExecutedAssertion, boolean checkAssertion) {
 		for (Helper aHelper : resultNotExecutedAssertion) {
 
-			CtInvocation element = (checkAssertion) ? aHelper.getAssertion().getCtAssertion()
-					: aHelper.getCalls().get(0);
+			// Helper call
+			if (!checkAssertion) {
+				// check the first call
+				CtInvocation element = aHelper.getCalls().get(0);
 
-			CtIf parentIf = element.getParent(CtIf.class);
-			if (parentIf != null) {
-				// complex
-				aHelper.setInsideAnIf(true);
+				checkInsideIf(aHelper, element);
 			} else {
-				// not complex
-				aHelper.setInsideAnIf(false);
+				// first check the assertion
+				CtInvocation assertion = aHelper.getAssertion().getCtAssertion();
+				boolean assertInsideIf = checkInsideIf(aHelper, assertion);
+				if (!assertInsideIf) {
+					// check the calls are inside
+					for (CtInvocation call : aHelper.getCalls()) {
+
+						boolean callInsideIf = checkInsideIf(aHelper, call);
+						if (callInsideIf) {
+							return;
+						}
+
+					}
+
+				}
+
 			}
+
+		}
+	}
+
+	private boolean checkInsideIf(Helper aHelper, CtInvocation element) {
+		CtIf parentIf = element.getParent(CtIf.class);
+		if (parentIf != null) {
+			// complex
+			aHelper.setInsideAnIf(true);
+			return true;
+		} else {
+			// not complex
+			aHelper.setInsideAnIf(false);
+			return false;
 		}
 	}
 

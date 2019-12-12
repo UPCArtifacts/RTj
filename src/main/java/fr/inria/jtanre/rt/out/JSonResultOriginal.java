@@ -38,8 +38,6 @@ import spoon.reflect.declaration.CtType;
 public class JSonResultOriginal {
 	public static final String TYPE_ROTTEN = "type";
 
-	private static final String FULL_ROTTEN_TEST = "Full_Rotten_Test";
-
 	private static final String SMOKE_TEST = "Smoke_Test";
 
 	private static final String TEST_MISSED_FAIL = "Rotten_Missed_Fail";
@@ -56,7 +54,12 @@ public class JSonResultOriginal {
 
 	private static final String ROTTEN_CONTEXT_DEP_ASSERTIONS = "Context_Dep_Rotten_Assertions";
 
+	private static final String ROTTEN_CONTEXT_DEP = "Context_Dep_Rotten";
+
 	// The fulls
+
+	private static final String FULL_ROTTEN_TEST = "Full_Rotten_Test";
+
 	private static final String FULL_ROTTEN_TEST_HELPERS_CALL = "Full_Rotten_Test_Rotten_Helpers_Call";
 
 	private static final String FULL_ROTTEN_TEST_HELPERS_ASSERTION = "Full_Rotten_Test_Rotten_Helpers_Assertion";
@@ -114,10 +117,17 @@ public class JSonResultOriginal {
 		JsonArray testsArray = new JsonArray();
 		root.add("tests", testsArray);
 		Set<String> rTestclasses = new HashSet<>();
+
+		boolean analyzeSmoke = ConfigurationProperties.getPropertyBool("include_smoke");
+		boolean analyzeRedundant = ConfigurationProperties.getPropertyBool("include_redundant_assertions");
+		boolean analyzeExceptions = ConfigurationProperties.getPropertyBool("include_exceptions");
+
+		List<String> cacheAnayzed = new ArrayList();
+
 		for (GenericTestAnalysisResults gr : resultByTest) {
 
 			TestIntermediateAnalysisResult tr = (TestIntermediateAnalysisResult) gr;
-			TestAnalysisResult resultClassification = tr.generateFinalResult();
+			TestAnalysisResult rottenResults = tr.generateFinalResult();
 
 			JsonObject testjson = new JsonObject();
 			JsonArray typesRottens = new JsonArray();
@@ -127,7 +137,8 @@ public class JSonResultOriginal {
 			JsonArray summaryRottens = new JsonArray();
 			testjson.add("rotten_info", summaryRottens);
 			testjson.addProperty("test_class", tr.getNameOfTestClass());
-			testjson.addProperty("test_name", tr.getTestMethodFromClass());
+			String testMethodFromClass = tr.getTestMethodFromClass();
+			testjson.addProperty("test_name", testMethodFromClass);
 			testjson.addProperty("has_expects_exception", (tr.getExpectException().size() > 0) ? "true" : "false");
 			testjson.addProperty("executed_only_assume", (tr.isOnlyAssumeExecuted()) ? "true" : "false");
 			testjson.addProperty("nr_assume", tr.getAllAssumesFromTest().size());
@@ -149,69 +160,11 @@ public class JSonResultOriginal {
 			boolean hasTryCatch = tr.hasTryCatch();
 			testjson.addProperty("has_try_catch", hasTryCatch);
 
-			// Here the complex:
-
-			// Asserts
-
-			int r = add_ASSERTIONS(projectFacade, commitid, branch, remote, projectsubfolder, tr, summaryRottens,
-					uniquesTypesRottern, resultClassification.contextAssertion, ROTTEN_CONTEXT_DEP_ASSERTIONS);
-			onerotten = onerotten || (r > 0);
-			nrRtAssertion += (r > 0) ? 1 : 0;
-			//
-
-			r = add_HELPERS_CALL(commitid, branch, remote, projectsubfolder, tr, summaryRottens, uniquesTypesRottern,
-					resultClassification.contextHelperCall, ROTTEN_CONTEXT_DEP_HELPERS_CALL);
-			onerotten = onerotten || (r > 0);
-			nrRtHelperCall += (r > 0) ? 1 : 0;
+			int nrCasesNotExecuted = 0;
 
 			//
-
-			r = add_HELPERS_ASSERTION(commitid, branch, remote, projectsubfolder, tr, summaryRottens,
-					uniquesTypesRottern, resultClassification.contextHelperAssertion, ROTTEN_CONTEXT_DEP_ASSERTIONS);
-			onerotten = onerotten || (r > 0);
-			nrRttHelperAssert += (r > 0) ? 1 : 0;
-			//
-			/// ------Now the full-----
-
-			r = add_ASSERTIONS(projectFacade, commitid, branch, remote, projectsubfolder, tr, summaryRottens,
-					uniquesTypesRottern, resultClassification.fullRottenAssert, FULL_ROTTEN_TEST_ASSERTIONS);
-			onerotten = onerotten || (r > 0);
-			nrRtFull += (r > 0) ? 1 : 0;
-			//
-
-			r = add_HELPERS_CALL(commitid, branch, remote, projectsubfolder, tr, summaryRottens, uniquesTypesRottern,
-					resultClassification.fullRottenHelperCall, FULL_ROTTEN_TEST_HELPERS_CALL);
-			onerotten = onerotten || (r > 0);
-			nrRtFull += (r > 0) ? 1 : 0;
-
-			//
-			r = add_HELPERS_ASSERTION(commitid, branch, remote, projectsubfolder, tr, summaryRottens,
-					uniquesTypesRottern, resultClassification.fullRottenHelperAssert,
-					FULL_ROTTEN_TEST_HELPERS_ASSERTION);
-			onerotten = onerotten || (r > 0);
-			nrRtFull += (r > 0) ? 1 : 0;
-
-			//
-			if (!resultClassification.skip.isEmpty()) {
-
-				for (Skip iSkip : resultClassification.skip) {
-					CtReturn skip = iSkip.getExecutedReturn();
-					JsonObject singleSkip = new JsonObject();
-					singleSkip.addProperty("code", skip.toString().toString());
-					singleSkip.addProperty("line", getPosition(skip));
-					singleSkip.add("parent_types", getParentTypes(skip));
-					onerotten = true;
-					summaryRottens.add(singleSkip);
-					singleSkip.addProperty(TYPE_ROTTEN, ROTTEN_SKIP);
-					writeJsonLink(commitid, branch, remote, projectsubfolder, skip, singleSkip);
-					uniquesTypesRottern.add(ROTTEN_SKIP);
-				}
-				nrSkip++;
-			}
-
-			//
-			if (!resultClassification.missedFail.isEmpty()) {
-				for (AsAssertion missedInv : resultClassification.missedFail) {
+			if (!rottenResults.missedFail.isEmpty() && !cacheAnayzed.contains(testMethodFromClass + TEST_MISSED_FAIL)) {
+				for (AsAssertion missedInv : rottenResults.missedFail) {
 					JsonObject missedJson = new JsonObject();
 					missedJson.addProperty("code_assertion", missedInv.toString().toString());
 					missedJson.addProperty("line_assertion", getPosition(missedInv.getCtAssertion()));
@@ -222,78 +175,166 @@ public class JSonResultOriginal {
 					summaryRottens.add(missedJson);
 					missedJson.addProperty(TYPE_ROTTEN, TEST_MISSED_FAIL);
 					uniquesTypesRottern.add(TEST_MISSED_FAIL);
+					cacheAnayzed.add(testMethodFromClass + TEST_MISSED_FAIL);
 				}
 				nrAllMissed++;
 			}
 
 			//
-			if (!resultClassification.redundantAssertion.isEmpty()) {
-				for (AsAssertion missedInv : resultClassification.redundantAssertion) {
-					JsonObject missedJson = new JsonObject();
-					missedJson.addProperty("code_assertion", missedInv.toString().toString());
-					missedJson.addProperty("line_assertion", getPosition(missedInv.getCtAssertion()));
-					missedJson.addProperty("path_assertion",
-							getRelativePath(missedInv.getCtAssertion(), projectFacade));
-					writeJsonLink(commitid, branch, remote, projectsubfolder, missedInv.getCtAssertion(), missedJson);
+			if (!rottenResults.skip.isEmpty() && !cacheAnayzed.contains(testMethodFromClass + ROTTEN_SKIP)) {
+
+				for (Skip iSkip : rottenResults.skip) {
+					CtReturn skip = iSkip.getExecutedReturn();
+					JsonObject singleSkip = new JsonObject();
+					singleSkip.addProperty("code", skip.toString().toString());
+					singleSkip.addProperty("line", getPosition(skip));
+					singleSkip.add("parent_types", getParentTypes(skip));
 					onerotten = true;
-					summaryRottens.add(missedJson);
-					missedJson.addProperty(TYPE_ROTTEN, TEST_WITH_REDUNDANT_ASSERTION);
-					uniquesTypesRottern.add(TEST_WITH_REDUNDANT_ASSERTION);
+					summaryRottens.add(singleSkip);
+					singleSkip.addProperty(TYPE_ROTTEN, ROTTEN_SKIP);
+					writeJsonLink(commitid, branch, remote, projectsubfolder, skip, singleSkip);
+					uniquesTypesRottern.add(ROTTEN_SKIP);
+					cacheAnayzed.add(testMethodFromClass + ROTTEN_SKIP);
 				}
-				nrAllRedundant++;
+				nrSkip++;
+			} else if ((!rottenResults.contextAssertion.isEmpty() || !rottenResults.contextHelperCall.isEmpty()
+					|| !rottenResults.contextHelperAssertion.isEmpty())
+					&& !cacheAnayzed.contains(testMethodFromClass + ROTTEN_CONTEXT_DEP)) {
+
+				// Here the complex:
+
+				cacheAnayzed.add(testMethodFromClass + ROTTEN_CONTEXT_DEP);
+
+				// Asserts
+
+				nrCasesNotExecuted = add_ASSERTIONS(projectFacade, commitid, branch, remote, projectsubfolder, tr,
+						summaryRottens, uniquesTypesRottern, rottenResults.contextAssertion,
+						ROTTEN_CONTEXT_DEP_ASSERTIONS);
+				onerotten = onerotten || (nrCasesNotExecuted > 0);
+				nrRtAssertion += (nrCasesNotExecuted > 0) ? 1 : 0;
+				//
+
+				nrCasesNotExecuted = add_HELPERS_CALL(commitid, branch, remote, projectsubfolder, tr, summaryRottens,
+						uniquesTypesRottern, rottenResults.contextHelperCall, ROTTEN_CONTEXT_DEP_HELPERS_CALL);
+				onerotten = onerotten || (nrCasesNotExecuted > 0);
+				nrRtHelperCall += (nrCasesNotExecuted > 0) ? 1 : 0;
+
+				//
+
+				nrCasesNotExecuted = add_HELPERS_ASSERTION(commitid, branch, remote, projectsubfolder, tr,
+						summaryRottens, uniquesTypesRottern, rottenResults.contextHelperAssertion,
+						ROTTEN_CONTEXT_DEP_ASSERTIONS);
+				onerotten = onerotten || (nrCasesNotExecuted > 0);
+				nrRttHelperAssert += (nrCasesNotExecuted > 0) ? 1 : 0;
+
+			} else if ((!rottenResults.fullRottenAssert.isEmpty() || !rottenResults.fullRottenHelperCall.isEmpty()
+					|| !rottenResults.fullRottenHelperAssert.isEmpty())
+					&& !cacheAnayzed.contains(testMethodFromClass + FULL_ROTTEN_TEST)) {
+				/// ------Now the full-----
+
+				cacheAnayzed.add(testMethodFromClass + FULL_ROTTEN_TEST);
+
+				nrCasesNotExecuted = add_ASSERTIONS(projectFacade, commitid, branch, remote, projectsubfolder, tr,
+						summaryRottens, uniquesTypesRottern, rottenResults.fullRottenAssert,
+						FULL_ROTTEN_TEST_ASSERTIONS);
+				onerotten = onerotten || (nrCasesNotExecuted > 0);
+				nrRtFull += (nrCasesNotExecuted > 0) ? 1 : 0;
+				//
+
+				nrCasesNotExecuted = add_HELPERS_CALL(commitid, branch, remote, projectsubfolder, tr, summaryRottens,
+						uniquesTypesRottern, rottenResults.fullRottenHelperCall, FULL_ROTTEN_TEST_HELPERS_CALL);
+				onerotten = onerotten || (nrCasesNotExecuted > 0);
+				nrRtFull += (nrCasesNotExecuted > 0) ? 1 : 0;
+
+				//
+				nrCasesNotExecuted = add_HELPERS_ASSERTION(commitid, branch, remote, projectsubfolder, tr,
+						summaryRottens, uniquesTypesRottern, rottenResults.fullRottenHelperAssert,
+						FULL_ROTTEN_TEST_HELPERS_ASSERTION);
+				onerotten = onerotten || (nrCasesNotExecuted > 0);
+				nrRtFull += (nrCasesNotExecuted > 0) ? 1 : 0;
+
+			}
+			// Now the additional cases
+			//
+			if (analyzeRedundant) {
+				if (!rottenResults.redundantAssertion.isEmpty()
+						&& !cacheAnayzed.contains(testMethodFromClass + TEST_WITH_REDUNDANT_ASSERTION)) {
+					for (AsAssertion missedInv : rottenResults.redundantAssertion) {
+						JsonObject missedJson = new JsonObject();
+						missedJson.addProperty("code_assertion", missedInv.toString().toString());
+						missedJson.addProperty("line_assertion", getPosition(missedInv.getCtAssertion()));
+						missedJson.addProperty("path_assertion",
+								getRelativePath(missedInv.getCtAssertion(), projectFacade));
+						writeJsonLink(commitid, branch, remote, projectsubfolder, missedInv.getCtAssertion(),
+								missedJson);
+						onerotten = true;
+						summaryRottens.add(missedJson);
+						missedJson.addProperty(TYPE_ROTTEN, TEST_WITH_REDUNDANT_ASSERTION);
+						uniquesTypesRottern.add(TEST_WITH_REDUNDANT_ASSERTION);
+						cacheAnayzed.add(testMethodFromClass + TEST_WITH_REDUNDANT_ASSERTION);
+					}
+					nrAllRedundant++;
+				}
 			}
 			boolean withexception = false;
-			if (tr.isExceptionExpected() && tr.testElementsNotPresentInTest()) {
-				JsonObject testWithException = new JsonObject();
-				summaryRottens.add(testWithException);
-				testWithException.addProperty(TYPE_ROTTEN, TEST_WITH_EXCEPTION);
+			if (analyzeExceptions) {
+				if (tr.isExceptionExpected() && tr.testElementsNotPresentInTest()
+						&& !cacheAnayzed.contains(testMethodFromClass + TEST_WITH_EXCEPTION)) {
+					JsonObject testWithException = new JsonObject();
+					summaryRottens.add(testWithException);
+					testWithException.addProperty(TYPE_ROTTEN, TEST_WITH_EXCEPTION);
 
-				JsonArray expEx = new JsonArray();
-				for (String ee : tr.getExpectException()) {
-					expEx.add(ee);
+					JsonArray expEx = new JsonArray();
+					for (String ee : tr.getExpectException()) {
+						expEx.add(ee);
+					}
+					JsonArray failsAr = new JsonArray();
+					//
+					testWithException.add("expected_exception", expEx);
+					testWithException.add("fails", failsAr);
+
+					for (CtInvocation inv : tr.getAllFailsFromTest()) {
+
+						JsonObject failJson = new JsonObject();
+						failJson.addProperty("code_assertion", inv.toString().toString());
+						failJson.addProperty("line_assertion", getPosition(inv));
+						failJson.addProperty("path_assertion", getRelativePath(inv, projectFacade));
+						writeJsonLink(commitid, branch, remote, projectsubfolder, inv, failJson);
+						onerotten = true;
+						failsAr.add(failJson);
+					}
+
+					withexception = true;
+					nrWithExceptions++;
+					uniquesTypesRottern.add(TEST_WITH_EXCEPTION);
+					cacheAnayzed.add(testMethodFromClass + TEST_WITH_EXCEPTION);
 				}
-				JsonArray failsAr = new JsonArray();
-				//
-				testWithException.add("expected_exception", expEx);
-				testWithException.add("fails", failsAr);
-
-				for (CtInvocation inv : tr.getAllFailsFromTest()) {
-
-					JsonObject failJson = new JsonObject();
-					failJson.addProperty("code_assertion", inv.toString().toString());
-					failJson.addProperty("line_assertion", getPosition(inv));
-					failJson.addProperty("path_assertion", getRelativePath(inv, projectFacade));
-					writeJsonLink(commitid, branch, remote, projectsubfolder, inv, failJson);
-					onerotten = true;
-					failsAr.add(failJson);
-				}
-
-				withexception = true;
-				nrWithExceptions++;
-				uniquesTypesRottern.add(TEST_WITH_EXCEPTION);
 			}
+			if (analyzeSmoke) {
+				if (tr.isSmokeTest() && tr.getExpectException().isEmpty()
+						&& tr.getAllExpectedExceptionFromTest().isEmpty()
+						&& cacheAnayzed.contains(testMethodFromClass + SMOKE_TEST)) {
 
-			if (tr.isSmokeTest() && tr.getExpectException().isEmpty()
-					&& tr.getAllExpectedExceptionFromTest().isEmpty()) {
+					List<CtInvocation> allAssertionsFromTest = rottenResults.getOtherMethodInvocations();
 
-				List<CtInvocation> allAssertionsFromTest = resultClassification.getOtherMethodInvocations();
+					testsArray.add(testjson);
+					rTestclasses.add(tr.getNameOfTestClass());
+					nrSmokeTest += 1;
+					JsonObject smokeTest = new JsonObject();
+					smokeTest.addProperty(TYPE_ROTTEN, SMOKE_TEST);
 
-				testsArray.add(testjson);
-				rTestclasses.add(tr.getNameOfTestClass());
-				nrSmokeTest += 1;
-				JsonObject smokeTest = new JsonObject();
-				smokeTest.addProperty(TYPE_ROTTEN, SMOKE_TEST);
+					JsonArray missrarray = new JsonArray();
+					smokeTest.add("other_method_invocation", missrarray);
+					for (CtInvocation otherinv : allAssertionsFromTest) {
+						missrarray.add(createMethodSignature(otherinv));
+					}
 
-				JsonArray missrarray = new JsonArray();
-				smokeTest.add("other_method_invocation", missrarray);
-				for (CtInvocation otherinv : allAssertionsFromTest) {
-					missrarray.add(createMethodSignature(otherinv));
+					summaryRottens.add(smokeTest);
+
+					uniquesTypesRottern.add(SMOKE_TEST);
+					cacheAnayzed.add(testMethodFromClass + SMOKE_TEST);
+
 				}
-
-				summaryRottens.add(smokeTest);
-
-				uniquesTypesRottern.add(SMOKE_TEST);
-
 			}
 
 			/// Dont include smoke
@@ -334,14 +375,20 @@ public class JSonResultOriginal {
 		summary.addProperty("nr_classes", typesspoon.size());
 
 		summary.addProperty("nr_" + this.ROTTEN_CONTEXT_DEP_ASSERTIONS, nrRtAssertion);
-		summary.addProperty("nr_" + this.TEST_WITH_REDUNDANT_ASSERTION, nrAllRedundant);
 		summary.addProperty("nr_" + this.ROTTEN_CONTEXT_DEP_HELPERS_CALL, nrRtHelperCall);
 		summary.addProperty("nr_" + this.ROTTEN_CONTEXT_DEP_HELPERS_ASSERTION, nrRttHelperAssert);
 		summary.addProperty("nr_" + this.ROTTEN_SKIP, nrSkip);
 		summary.addProperty("nr_" + this.TEST_MISSED_FAIL, nrAllMissed);
-		summary.addProperty("nr_" + this.SMOKE_TEST, nrSmokeTest);
 		summary.addProperty("nr_" + this.FULL_ROTTEN_TEST, nrRtFull);
-		summary.addProperty("nr_" + this.TEST_WITH_EXCEPTION, nrWithExceptions);
+
+		if (analyzeSmoke)
+			summary.addProperty("nr_" + this.SMOKE_TEST, nrSmokeTest);
+
+		if (analyzeExceptions)
+			summary.addProperty("nr_" + this.TEST_WITH_EXCEPTION, nrWithExceptions);
+
+		if (analyzeRedundant)
+			summary.addProperty("nr_" + this.TEST_WITH_REDUNDANT_ASSERTION, nrAllRedundant);
 
 		return root;
 	}
