@@ -68,10 +68,9 @@ For instance, this portion of the JSON shows as example, the information related
 
 ```
 {
-	"test_class": "com.alibaba.csp.sentinel.slots.statistic.metric.BucketLeapArrayTest",
+	 "test_class": "com.alibaba.csp.sentinel.slots.statistic.metric.BucketLeapArrayTest",
       "test_name": "testListWindowsNewBucket",
-      "github_link": "https://github.com/alibaba/Sentinel/tree/103fa307e57de1b6660a8a004e9d8f18283b18c9/sentinel-core/src/test/java/com/alibaba/csp/sentinel/slots/statistic/metric/BucketLeapArrayTest.java#L191",
-    }
+      "github_link": "https://github.com/alibaba/Sentinel/tree/103fa307e57de1b6660a8a004e9d8f18283b18c9/sentinel-core/src/test/java/com/alibaba/csp/sentinel/slots/statistic/metric/BucketLeapArrayTest.java#L191", 
       "rotten_types_summary": [
         "Full_Rotten_Test_Rotten_Assertions"
       ],
