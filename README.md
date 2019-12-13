@@ -1,5 +1,12 @@
 #  RTj: a Java framework for detecting and refactoring rotten greentest cases
 
+
+If you use RTj, please cite our paper:
+
+
+* RTj: a Java framework for detecting and refactoring rotten green testcases. Matias Martinez, Anne Etien, Stéphane Ducasse, and Christopher Fuhrman. 2019.
+
+
 ## Prerequisites
 
 RTj needs to run on a Java Virtual Machine 8. 
@@ -12,6 +19,9 @@ RTj depends on Astor project. So first, it's necessary to clone Astor from X, an
 
 Then, after cloning RTj project, go to the cloned project and run command `mvn package`. If the build sucessfully finishes, it should be the jar  `RTj-0.0.1-SNAPSHOT-jar-with-dependencies.jar` on folder `target`. (you can rename it to rtj.jar for simplicity).
 
+Before running the test cases, you need to compile the project under test.
+For that, go to `examples/rt-project` and execute `mvn test`.
+
 
 ## Execution
 
@@ -20,9 +30,9 @@ Before running RTj, please compile the project under test (e.g., mvn compile)  a
 ### Analysis of Maven project
 
 RTj was specially designed to analyze maven projects.
-For that, it's necessary to install the mave plugin X (see here).
+For that, it's necessary to install the maven plugin [project-info-maven-plugin](https://github.com/tdurieux/project-info-maven-plugin).
 This plugin resolves: the dependencies (jars) of the project under analysis, the folders with source code, etc. 
-Then, lauch RTj using this command:
+Then, launch RTj using this command:
 ```
 java -cp /<absolute_path_to_jar>/rt.jar   fr.inria.jtanre.rt.RtMain   -location  <location_of_project to_analyzer>  -out  <Folder_Output> 
 ``` 
@@ -78,6 +88,8 @@ RTj provides an option `-printrottentest` to print on the screen the rotten info
 
 RTj can analyze any kind of Java project, not necessary Maven project. 
 For that, it will be necessary to pass (via command line arguments) to RTj additional information about the project under analysis.
+As by default, RTj calls [project-info-maven-plugin](https://github.com/tdurieux/project-info-maven-plugin),  to disable this feature, pass the argument `autoconfigure false`.
+Then, use the following arguments to pass the information related to the project to analyze.
 
     -location "absolute location of the project to analyze" 
 
