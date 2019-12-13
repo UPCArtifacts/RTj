@@ -1,10 +1,10 @@
-#  RTj: a Java framework for detecting and refactoring rotten greentest cases
+#  RTj: a Java framework for detecting and refactoring rotten green test cases
 
 
 If you use RTj, please cite our paper:
 
 
-* RTj: a Java framework for detecting and refactoring rotten green testcases. Matias Martinez, Anne Etien, Stéphane Ducasse, and Christopher Fuhrman. 2019.
+* *RTj: a Java framework for detecting and refactoring rotten green testcases*. Matias Martinez, Anne Etien, Stéphane Ducasse, and Christopher Fuhrman. 2019.
 
 
 ## Prerequisites
@@ -25,12 +25,18 @@ For that, go to `examples/rt-project` and execute `mvn test`.
 
 ## Execution
 
-Before running RTj, please compile the project under test (e.g., mvn compile)  and execute the test (e.g., mvn test). It's necessary that all the dependencies of the project under test be download on your machine (mvn compile will do that).
+Before running RTj, please compile the project under test (e.g., mvn compile)  and execute the test (e.g., mvn test). 
+It's necessary that all the dependencies of the project under test be downloaded on your machine (mvn compile will do that) before starting the analysis.
+
+There are two ways of executing RTj. 
+The first one targets to Maven projects: RTj automatically extracts the properties of the (maven) project under analysis (e.g., dependencies).
+The Second one targets other types of projects, and the task of extract project's information (such as dependencies) and passing them to RTj must be done by the user.
+
 
 ### Analysis of Maven project
 
-RTj was specially designed to analyze maven projects.
-For that, it's necessary to install the maven plugin [project-info-maven-plugin](https://github.com/tdurieux/project-info-maven-plugin).
+
+This mode needs have installed the maven plugin [project-info-maven-plugin](https://github.com/tdurieux/project-info-maven-plugin).
 This plugin resolves: the dependencies (jars) of the project under analysis, the folders with source code, etc. 
 Then, launch RTj using this command:
 ```
