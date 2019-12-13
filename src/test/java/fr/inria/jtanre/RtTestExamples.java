@@ -1916,6 +1916,7 @@ public class RtTestExamples {
 		cs.command.put("-location", new File("./examples/rt-project/").getAbsolutePath());
 		cs.command.put("-mode", "rt");
 		cs.command.put("-printrottentest", "true");
+		cs.command.put("-autoconfigure", "false");
 
 		main1.execute(cs.flat());
 		RtEngine etEn = (RtEngine) main1.getEngine();

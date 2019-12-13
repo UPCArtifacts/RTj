@@ -63,7 +63,7 @@ public class RtEngine extends AstorCoreEngine {
 	List<String> namespace = Arrays.asList("org.assertj", "org.testng", "org.mockito", "org.spockframework",
 			"org.junit", "cucumber", "org.jbehave");
 
-	List<TestAnalyzer> elementProcessor = new ArrayList<>();
+	List<TestAnalyzer> testAnalyzers = new ArrayList<>();
 	List<RtOutput> outputs = new ArrayList<>();
 
 	protected DynamicTestInformation dynamicInfo = null;
@@ -86,22 +86,22 @@ public class RtEngine extends AstorCoreEngine {
 		ConfigurationProperties.setProperty("maxsuspcandidates", "1000000000");
 		ConfigurationProperties.setProperty("loglevel", "INFO");
 
-		elementProcessor.add(new AssertionProcessor());
-		elementProcessor.add(new HelperCallProcessor());
-		elementProcessor.add(new HelperAssertionProcessor());
-		elementProcessor.add(new AssumeProcessor());
+		testAnalyzers.add(new AssertionProcessor());
+		testAnalyzers.add(new HelperCallProcessor());
+		testAnalyzers.add(new HelperAssertionProcessor());
+		testAnalyzers.add(new AssumeProcessor());
 
-		elementProcessor.add(new ExpectedExceptionAnnotatedProcessor());
-		elementProcessor.add(new ExpectedExceptionProcessor());
-		elementProcessor.add(new FailProcessor());
+		testAnalyzers.add(new ExpectedExceptionAnnotatedProcessor());
+		testAnalyzers.add(new ExpectedExceptionProcessor());
+		testAnalyzers.add(new FailProcessor());
 
-		elementProcessor.add(new MissedFailProcessor());
-		elementProcessor.add(new OtherInvocationsProcessor());
-		elementProcessor.add(new RedundantAssertionProcessor());
-		elementProcessor.add(new SkipProcessor());
-		elementProcessor.add(new SmokeProcessor());
-		elementProcessor.add(new ControlFlowProcessor());
-		elementProcessor.add(new AnyStatementExecuted());
+		testAnalyzers.add(new MissedFailProcessor());
+		testAnalyzers.add(new OtherInvocationsProcessor());
+		testAnalyzers.add(new RedundantAssertionProcessor());
+		testAnalyzers.add(new SkipProcessor());
+		testAnalyzers.add(new SmokeProcessor());
+		testAnalyzers.add(new ControlFlowProcessor());
+		testAnalyzers.add(new AnyStatementExecuted());
 
 		outputs.add(new JSonResultOriginal());
 		outputs.add(new RefactorOutput());
@@ -113,7 +113,17 @@ public class RtEngine extends AstorCoreEngine {
 			for (String op : operators) {
 				TestAnalyzer aop = (TestAnalyzer) PlugInLoader.loadPlugin(op, TestAnalyzer.class);
 				if (aop != null)
-					elementProcessor.add(aop);
+					testAnalyzers.add(aop);
+			}
+		}
+
+		String outputsP = ConfigurationProperties.getProperty("outputs");
+		if (outputsP != null && !outputsP.isEmpty()) {
+			String[] operators = outputsP.split(File.pathSeparator);
+			for (String op : operators) {
+				RtOutput aop = (RtOutput) PlugInLoader.loadPlugin(op, RtOutput.class);
+				if (aop != null)
+					this.outputs.add(aop);
 			}
 		}
 
@@ -384,7 +394,7 @@ public class RtEngine extends AstorCoreEngine {
 		List<?> allStmtsFromClass = model.getStatementsFromMethod(testMethodModel);// testMethodModel.getElements(new
 																					// LineFilter());
 
-		for (TestAnalyzer elementProcessor : this.elementProcessor) {
+		for (TestAnalyzer elementProcessor : this.testAnalyzers) {
 
 			List<?> retrievedElements = elementProcessor.findElements(partialStaticResults, allStmtsFromClass,
 					testMethodModel, allClasses);
@@ -392,7 +402,7 @@ public class RtEngine extends AstorCoreEngine {
 		}
 
 		// CLassification
-		for (TestAnalyzer elementProcessor : this.elementProcessor) {
+		for (TestAnalyzer elementProcessor : this.testAnalyzers) {
 
 			List<?> retrievedElements = partialStaticResults.get(elementProcessor.getClass().getSimpleName());
 
@@ -405,7 +415,7 @@ public class RtEngine extends AstorCoreEngine {
 		/// Labelling
 
 		// CLassification
-		for (TestAnalyzer elementProcessor : this.elementProcessor) {
+		for (TestAnalyzer elementProcessor : this.testAnalyzers) {
 
 			List<?> retrievedElements = partialStaticResults.get(elementProcessor.getClass());
 			Classification<?> classif = partialDynamicResults.get(elementProcessor.getClass());
@@ -414,20 +424,19 @@ public class RtEngine extends AstorCoreEngine {
 					partialDynamicResults);
 
 			// Refactor:
-			List<ProgramVariant> variants = elementProcessor.refactor(model, aTestModelCtClass, resultTestCase,
+			List<ProgramVariant> variantsRefactors = elementProcessor.refactor(model, aTestModelCtClass, resultTestCase,
 					retrievedElements, null, partialStaticResults, partialDynamicResults);
 
-			for (ProgramVariant programVariant : variants) {
-
-				programVariant.setId(this.solutions.size());
-				try {
-					// saveRtVariant(programVariant);
-					this.solutions.add(programVariant);
-				} catch (Exception e1) {
-					e1.printStackTrace();
-					log.error("Problems when saving variant " + programVariant.getId());
+			if (variantsRefactors != null) {
+				for (ProgramVariant programVariant : variantsRefactors) {
+					programVariant.setId(this.solutions.size());
+					try {
+						this.solutions.add(programVariant);
+					} catch (Exception e1) {
+						e1.printStackTrace();
+						log.error("Problems when saving variant " + programVariant.getId());
+					}
 				}
-
 			}
 
 		}
@@ -507,6 +516,22 @@ public class RtEngine extends AstorCoreEngine {
 
 	public void setModel(ProgramModel model) {
 		this.model = model;
+	}
+
+	public List<RtOutput> getOutputs() {
+		return outputs;
+	}
+
+	public void setOutputs(List<RtOutput> outputs) {
+		this.outputs = outputs;
+	}
+
+	public List<TestAnalyzer> getTestAnalyzers() {
+		return testAnalyzers;
+	}
+
+	public void setTestAnalyzers(List<TestAnalyzer> testAnalyzers) {
+		this.testAnalyzers = testAnalyzers;
 	}
 
 }

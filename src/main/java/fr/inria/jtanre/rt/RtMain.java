@@ -16,6 +16,7 @@ import fr.inria.main.evolution.AstorMain;
 public class RtMain extends AstorMain {
 
 	static {
+		options.addOption("outputs", true, "Adds new outputs processors");
 		options.addOption("analyzers", true, "Adds new analyzers");
 		options.addOption("printrottentest", false, "Prints the information of the rotten green test found");
 		options.addOption("refactor", false, "Refactor of rotten tests");
@@ -60,8 +61,8 @@ public class RtMain extends AstorMain {
 		if (cmd.hasOption("analyzers")) {
 			ConfigurationProperties.properties.setProperty("analyzers", cmd.getOptionValue("analyzers"));
 		}
-		if (cmd.hasOption("output")) {
-			ConfigurationProperties.properties.setProperty("output", cmd.getOptionValue("output"));
+		if (cmd.hasOption("outputs")) {
+			ConfigurationProperties.properties.setProperty("outputs", cmd.getOptionValue("outputs"));
 		}
 		if (!cmd.hasOption("mode")) {
 			ConfigurationProperties.properties.setProperty("mode", "rt");
