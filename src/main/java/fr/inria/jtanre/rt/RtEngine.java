@@ -1,8 +1,6 @@
 package fr.inria.jtanre.rt;
 
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -10,11 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
-
-import fr.inria.astor.core.entities.OperatorInstance;
 import fr.inria.astor.core.entities.ProgramVariant;
 import fr.inria.astor.core.faultlocalization.entity.SuspiciousCode;
 import fr.inria.astor.core.faultlocalization.gzoltar.TestCaseResult;
@@ -33,6 +26,8 @@ import fr.inria.jtanre.rt.core.TestIntermediateAnalysisResult;
 import fr.inria.jtanre.rt.elements.AsAssertion;
 import fr.inria.jtanre.rt.out.JSonResultOriginal;
 import fr.inria.jtanre.rt.out.PrinterOutResultOriginal;
+import fr.inria.jtanre.rt.out.RefactorOutput;
+import fr.inria.jtanre.rt.out.RtOutput;
 import fr.inria.jtanre.rt.processors.AnyStatementExecuted;
 import fr.inria.jtanre.rt.processors.AssertionProcessor;
 import fr.inria.jtanre.rt.processors.AssumeProcessor;
@@ -69,6 +64,7 @@ public class RtEngine extends AstorCoreEngine {
 			"org.junit", "cucumber", "org.jbehave");
 
 	List<TestAnalyzer> elementProcessor = new ArrayList<>();
+	List<RtOutput> outputs = new ArrayList<>();
 
 	protected DynamicTestInformation dynamicInfo = null;
 	protected ProgramModel model = null;
@@ -88,6 +84,7 @@ public class RtEngine extends AstorCoreEngine {
 		ConfigurationProperties.setProperty("maxGeneration", "1");
 		ConfigurationProperties.setProperty("maxmodificationpoints", "1000000000");
 		ConfigurationProperties.setProperty("maxsuspcandidates", "1000000000");
+		ConfigurationProperties.setProperty("loglevel", "INFO");
 
 		elementProcessor.add(new AssertionProcessor());
 		elementProcessor.add(new HelperCallProcessor());
@@ -105,6 +102,10 @@ public class RtEngine extends AstorCoreEngine {
 		elementProcessor.add(new SmokeProcessor());
 		elementProcessor.add(new ControlFlowProcessor());
 		elementProcessor.add(new AnyStatementExecuted());
+
+		outputs.add(new JSonResultOriginal());
+		outputs.add(new RefactorOutput());
+		outputs.add(new PrinterOutResultOriginal());
 
 		String analyzers = ConfigurationProperties.getProperty("analyzers");
 		if (analyzers != null && !analyzers.isEmpty()) {
@@ -420,7 +421,7 @@ public class RtEngine extends AstorCoreEngine {
 
 				programVariant.setId(this.solutions.size());
 				try {
-					saveRtVariant(programVariant);
+					// saveRtVariant(programVariant);
 					this.solutions.add(programVariant);
 				} catch (Exception e1) {
 					e1.printStackTrace();
@@ -432,20 +433,6 @@ public class RtEngine extends AstorCoreEngine {
 		}
 
 		return resultTestCase;
-
-	}
-
-	private void saveRtVariant(ProgramVariant programVariant) throws Exception {
-		// int generation = 0;
-
-		for (OperatorInstance oi : programVariant.getAllOperations()) {
-			oi.applyModification();
-		}
-
-		this.saveVariant(programVariant);
-
-		// Finally, reverse the changes done by the child
-		reverseOperationInModel(programVariant, 1);
 
 	}
 
@@ -491,39 +478,18 @@ public class RtEngine extends AstorCoreEngine {
 	@Override
 	public void atEnd() {
 
-		JSonResultOriginal jsoncoverted = new JSonResultOriginal();
-		JsonObject json = null;
-		if (exceptionReceived == null) {
-			json = jsoncoverted.toJson(ConfigurationProperties.getProperty("id"), this.projectFacade,
-					this.resultByTest);
-
-		} else {
-			json = jsoncoverted.toJsonError(ConfigurationProperties.getProperty("id"), this.projectFacade,
-					this.exceptionReceived);
-		}
-
-		System.out.println("rtjsonoutput: " + json);
-		Gson gson = new GsonBuilder().setPrettyPrinting().create();
-		String ppjson = gson.toJson(json);
-
 		String out = (ConfigurationProperties.getProperty("out") != null) ? ConfigurationProperties.getProperty("out")
 				: ConfigurationProperties.getProperty("workingDirectory");
-		String outpath = out + File.separator + "rt_" + ConfigurationProperties.getProperty("id") + ".json";
-		log.info("Saving json at \n" + outpath);
-		try {
-			FileWriter fw = new FileWriter(new File(outpath));
-			fw.write(ppjson);
-			fw.flush();
-			fw.close();
-		} catch (IOException e) {
 
-			e.printStackTrace();
-			log.error(e);
+		for (RtOutput rtOutput : outputs) {
+			try {
+				rtOutput.generateOutput(this, ConfigurationProperties.getProperty("id"), projectFacade, resultByTest,
+						this.solutions, exceptionReceived, out);
+			} catch (Exception e) {
+				System.out.println("Problems printing " + rtOutput.getClass().getCanonicalName());
+				e.printStackTrace();
+			}
 		}
-
-		PrinterOutResultOriginal outsyso = new PrinterOutResultOriginal();
-		outsyso.toJson(ConfigurationProperties.getProperty("id"), this.projectFacade, this.resultByTest);
-		System.out.println("Detailed results saved on file: " + outpath);
 
 	}
 

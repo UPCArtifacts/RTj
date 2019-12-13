@@ -18,6 +18,7 @@ public class RtMain extends AstorMain {
 	static {
 		options.addOption("analyzers", true, "Adds new analyzers");
 		options.addOption("printrottentest", false, "Prints the information of the rotten green test found");
+		options.addOption("refactor", false, "Refactor of rotten tests");
 	}
 
 	@Override
@@ -33,22 +34,22 @@ public class RtMain extends AstorMain {
 		String mode = ConfigurationProperties.getProperty("mode").toLowerCase();
 		// Creation of the execution mode
 		if (mode.equals("rt")) {
-			rtCore = new RtEngine(mutSupporter, projectFacade);
+			core = new RtEngine(mutSupporter, projectFacade);
 		} else {
-			rtCore = createEngineFromArgument(mode, mutSupporter, projectFacade);
+			core = createEngineFromArgument(mode, mutSupporter, projectFacade);
 		}
 
 		// Execution:
 
 		// Model creation
-		ProgramModel model = ((RtEngine) rtCore).createModel();
+		ProgramModel model = ((RtEngine) core).createModel();
 
 		// Loading extension Points
-		DynamicTestInformation dynamicInfo = ((RtEngine) rtCore).runTests();
+		DynamicTestInformation dynamicInfo = ((RtEngine) core).runTests();
 
-		((RtEngine) rtCore).runTestAnalyzers(model, dynamicInfo);
+		((RtEngine) core).runTestAnalyzers(model, dynamicInfo);
 
-		((RtEngine) rtCore).atEnd();
+		((RtEngine) core).atEnd();
 
 		long endT = System.currentTimeMillis();
 		System.out.println("Execution Time: " + ((endT - startT) / 1000d) + " seconds");
@@ -59,10 +60,27 @@ public class RtMain extends AstorMain {
 		if (cmd.hasOption("analyzers")) {
 			ConfigurationProperties.properties.setProperty("analyzers", cmd.getOptionValue("analyzers"));
 		}
+		if (cmd.hasOption("output")) {
+			ConfigurationProperties.properties.setProperty("output", cmd.getOptionValue("output"));
+		}
+		if (!cmd.hasOption("mode")) {
+			ConfigurationProperties.properties.setProperty("mode", "rt");
+		}
 
 		if (cmd.hasOption("printrottentest")) {
 			ConfigurationProperties.properties.setProperty("printrottentest", "true");
 		}
+
+		if (!cmd.hasOption("autoconfigure"))
+			ConfigurationProperties.properties.setProperty("autoconfigure", "true");
+
+		if (cmd.hasOption("refactor")) {
+			ConfigurationProperties.properties.setProperty("refactor", "true");
+		}
 	}
 
+	public static void main(String[] args) throws Exception {
+		RtMain m = new RtMain();
+		m.execute(args);
+	}
 }

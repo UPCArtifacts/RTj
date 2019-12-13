@@ -34,7 +34,9 @@ For that, it's necessary to install the maven plugin [project-info-maven-plugin]
 This plugin resolves: the dependencies (jars) of the project under analysis, the folders with source code, etc. 
 Then, launch RTj using this command:
 ```
-java -cp /<absolute_path_to_jar>/rt.jar   fr.inria.jtanre.rt.RtMain   -location  <location_of_project to_analyzer>  -out  <Folder_Output> 
+java -cp /<absolute_path_to_jar>/rt.jar   fr.inria.jtanre.rt.RtMain   \
+-location  <location_of_project to_analyzer> \
+-out  <Folder_Output> 
 ``` 
 
 This command will produces an output similar to this one:
