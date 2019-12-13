@@ -125,7 +125,17 @@ Finally, passing the qualified name of the new Analyzer using argument `-analyze
 RTj will then load that class and use them to analyze the test cases.
 
 
+
+
 ### Add new Output
+
+First, create a class that implements interface `RtOutput`, which has 1 method
+`generateOutput` that receives as input the tests's classification, the refactored test (if any) and produces an output (e.g., store the information of JSON, Print on the standard out, etc). 
+
+Then, add this class (the bytecode) to the classpath (e.g., `java -cp /<absolute_path_to_jar>/rt.jar:myNewOutput.class`).
+
+Finally, passing the qualified name of the new Output using argument `-outputs`.
+RTj will then load that class and use them to export the results.
 
 
 ### Override the Test execution
