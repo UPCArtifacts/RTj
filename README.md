@@ -148,11 +148,12 @@ RTj will then load that class and use them to export the results.
 
 ### Override the Test execution
 
+If you want that RTj analyzes test cases written in a particular testing framework F (different than junit 4.x) you need to override this extension point and to create an extension that is able to a) detect test from F, and b) run those test cases.
 
 First, create a class that implements interface `TestCaseExecutor`, which has 2 methods: 
-`runTests` and `findTestCasesToExecute`.
+`runTests` and `findTestCasesToExecute`. That class will implement the dynamic analysis module: it runs the instrumented test cases.
 
-Then, add this class (the bytecode) to the classpath (e.g., `java -cp /<absolute_path_to_jar>/rt.jar:myNewOutput.class`).
+Then, add this class (the bytecode) to the classpath (e.g., `java -cp /<absolute_path_to_jar>/rt.jar:myNewTestRunner.class`).
 
 Finally, passing the canonical class name of the new Test Executor using argument `-testexecutor`.
 RTj will then load that class and use them to do the dynamic analysis (i.e., , run instrumented test cases)
