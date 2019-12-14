@@ -18,6 +18,7 @@ public class RtMain extends AstorMain {
 	static {
 		options.addOption("outputs", true, "Adds new outputs processors");
 		options.addOption("analyzers", true, "Adds new analyzers");
+		options.addOption("testexecutor", true, "Adds new analyzers");
 		options.addOption("printrottentest", false, "Prints the information of the rotten green test found");
 		options.addOption("refactor", false, "Refactor of rotten tests");
 	}
@@ -43,13 +44,16 @@ public class RtMain extends AstorMain {
 		// Execution:
 
 		// Model creation
+
 		ProgramModel model = ((RtEngine) core).createModel();
 
 		// Loading extension Points
 		DynamicTestInformation dynamicInfo = ((RtEngine) core).runTests();
 
-		((RtEngine) core).runTestAnalyzers(model, dynamicInfo);
+		if (!ConfigurationProperties.getPropertyBool("skipanalysis")) {
 
+			((RtEngine) core).runTestAnalyzers(model, dynamicInfo);
+		}
 		((RtEngine) core).atEnd();
 
 		long endT = System.currentTimeMillis();
@@ -77,6 +81,10 @@ public class RtMain extends AstorMain {
 
 		if (cmd.hasOption("refactor")) {
 			ConfigurationProperties.properties.setProperty("refactor", "true");
+		}
+
+		if (cmd.hasOption("testexecutor")) {
+			ConfigurationProperties.properties.setProperty("testexecutor", cmd.getOptionValue("testexecutor"));
 		}
 	}
 

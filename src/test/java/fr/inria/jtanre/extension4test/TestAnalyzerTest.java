@@ -12,6 +12,13 @@ import spoon.reflect.code.CtStatement;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtExecutable;
 
+/**
+ * * Used only for test
+ * 
+ * @author Matias Martinez
+ *
+ * 
+ */
 public class TestAnalyzerTest<T, C, MC> implements TestAnalyzer {
 
 	public TestAnalyzerTest() {

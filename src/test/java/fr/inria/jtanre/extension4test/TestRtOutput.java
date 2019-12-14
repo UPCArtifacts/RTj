@@ -8,6 +8,12 @@ import fr.inria.jtanre.rt.RtEngine;
 import fr.inria.jtanre.rt.core.TestIntermediateAnalysisResult;
 import fr.inria.jtanre.rt.out.RtOutput;
 
+/**
+ * * Used only for test
+ * 
+ * @author Matias Martinez
+ *
+ */
 public class TestRtOutput implements RtOutput {
 
 	@Override

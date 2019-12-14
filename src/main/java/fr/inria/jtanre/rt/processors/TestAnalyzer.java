@@ -31,6 +31,12 @@ public interface TestAnalyzer<T, C, MC> extends AstorExtensionPoint {
 	public void labelTest(GenericTestAnalysisResults analysisResult, List<T> staticAnalysis, Classification<C> dynamic,
 			ResultMap<List<?>> statics, ResultMap<Classification<?>> dynamics);
 
+	/**
+	 * 
+	 * IIf the analyzer does not refactor, simply returns null or an empty list.
+	 * 
+	 * @return
+	 */
 	public List<ProgramVariant> refactor(ProgramModel model, CtClass aTestModelCtClass,
 			GenericTestAnalysisResults analysisResult, List<T> staticAnalysis, Classification<C> dynamic,
 			ResultMap<List<?>> statics, ResultMap<Classification<?>> dynamics);

@@ -28,6 +28,9 @@ For that, go to `examples/rt-project` and execute `mvn test`.
 Before running RTj, please compile the project under test (e.g., mvn compile)  and execute the test (e.g., mvn test). 
 It's necessary that all the dependencies of the project under test be downloaded on your machine (mvn compile will do that) before starting the analysis.
 
+The current implementation of RTj analyzes JUNIT 4.x test cases.
+For using other testing framework, please use the extension point [Override the Test execution](#override-the-test-execution)
+
 There are two ways of executing RTj. 
 The first one targets to Maven projects: RTj automatically extracts the properties of the (maven) project under analysis (e.g., dependencies).
 The Second one targets other types of projects, and the task of extract project's information (such as dependencies) and passing them to RTj must be done by the user.
@@ -126,7 +129,7 @@ First, create a class that implements interface `TestAnalyzer`, which has 4 meth
 
 Then, add this class (the bytecode) to the classpath (e.g., `java -cp /<absolute_path_to_jar>/rt.jar:myNewAnalyzwer.class`).
 
-Finally, passing the qualified name of the new Analyzer using argument `-analyzers`.
+Finally, passing the canonical class name of the new Analyzer using argument `-analyzers`.
 RTj will then load that class and use them to analyze the test cases.
 
 
@@ -139,11 +142,21 @@ First, create a class that implements interface `RtOutput`, which has 1 method
 
 Then, add this class (the bytecode) to the classpath (e.g., `java -cp /<absolute_path_to_jar>/rt.jar:myNewOutput.class`).
 
-Finally, passing the qualified name of the new Output using argument `-outputs`.
+Finally, passing the canonical name of the new Output using argument `-outputs`.
 RTj will then load that class and use them to export the results.
 
 
 ### Override the Test execution
+
+
+First, create a class that implements interface `TestCaseExecutor`, which has 2 methods: 
+`runTests` and `findTestCasesToExecute`.
+
+Then, add this class (the bytecode) to the classpath (e.g., `java -cp /<absolute_path_to_jar>/rt.jar:myNewOutput.class`).
+
+Finally, passing the canonical class name of the new Test Executor using argument `-testexecutor`.
+RTj will then load that class and use them to do the dynamic analysis (i.e., , run instrumented test cases)
+
 
 ### Override the model generation 
 

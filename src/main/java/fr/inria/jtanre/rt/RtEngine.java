@@ -9,7 +9,11 @@ import java.util.Map;
 import java.util.Optional;
 
 import fr.inria.astor.core.entities.ProgramVariant;
+import fr.inria.astor.core.faultlocalization.FaultLocalizationResult;
+import fr.inria.astor.core.faultlocalization.FaultLocalizationStrategy;
+import fr.inria.astor.core.faultlocalization.cocospoon.CocoFaultLocalization;
 import fr.inria.astor.core.faultlocalization.entity.SuspiciousCode;
+import fr.inria.astor.core.faultlocalization.gzoltar.GZoltarFaultLocalization;
 import fr.inria.astor.core.faultlocalization.gzoltar.TestCaseResult;
 import fr.inria.astor.core.manipulation.MutationSupporter;
 import fr.inria.astor.core.setup.ConfigurationProperties;
@@ -23,6 +27,8 @@ import fr.inria.jtanre.rt.core.ResultMap;
 import fr.inria.jtanre.rt.core.RuntimeInformation;
 import fr.inria.jtanre.rt.core.SpoonProgramModel;
 import fr.inria.jtanre.rt.core.TestIntermediateAnalysisResult;
+import fr.inria.jtanre.rt.core.dynamic.TestCaseExecutor;
+import fr.inria.jtanre.rt.core.dynamic.TestExecutorWrapperFaultLocalization;
 import fr.inria.jtanre.rt.elements.AsAssertion;
 import fr.inria.jtanre.rt.out.JSonResultOriginal;
 import fr.inria.jtanre.rt.out.PrinterOutResultOriginal;
@@ -43,6 +49,7 @@ import fr.inria.jtanre.rt.processors.RedundantAssertionProcessor;
 import fr.inria.jtanre.rt.processors.SkipProcessor;
 import fr.inria.jtanre.rt.processors.SmokeProcessor;
 import fr.inria.jtanre.rt.processors.TestAnalyzer;
+import fr.inria.main.evolution.ExtensionPoints;
 import fr.inria.main.evolution.PlugInLoader;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtExecutable;
@@ -66,12 +73,30 @@ public class RtEngine extends AstorCoreEngine {
 	List<TestAnalyzer> testAnalyzers = new ArrayList<>();
 	List<RtOutput> outputs = new ArrayList<>();
 
+	TestCaseExecutor testExecutor = null;
 	protected DynamicTestInformation dynamicInfo = null;
 	protected ProgramModel model = null;
+
+	Exception exceptionReceived = null;
 
 	public RtEngine(MutationSupporter mutatorExecutor, ProjectRepairFacade projFacade) throws Exception {
 		super(mutatorExecutor, projFacade);
 
+		setDefaultConfigurationProperties();
+
+		loadTestCasesExecutorForDynamicAnalysis();
+
+		loadDefaultAnalyzers();
+
+		loadDefaulOutputs();
+
+		loadCustomizeAnalyzers();
+
+		loadCustomizeOutputs();
+
+	}
+
+	private void setDefaultConfigurationProperties() {
 		ConfigurationProperties.setProperty("canhavezerosusp", "true");
 		ConfigurationProperties.setProperty("includeTestInSusp", "true");
 		ConfigurationProperties.setProperty("limitbysuspicious", "false");
@@ -85,7 +110,9 @@ public class RtEngine extends AstorCoreEngine {
 		ConfigurationProperties.setProperty("maxmodificationpoints", "1000000000");
 		ConfigurationProperties.setProperty("maxsuspcandidates", "1000000000");
 		ConfigurationProperties.setProperty("loglevel", "INFO");
+	}
 
+	protected void loadDefaultAnalyzers() {
 		testAnalyzers.add(new AssertionProcessor());
 		testAnalyzers.add(new HelperCallProcessor());
 		testAnalyzers.add(new HelperAssertionProcessor());
@@ -102,21 +129,15 @@ public class RtEngine extends AstorCoreEngine {
 		testAnalyzers.add(new SmokeProcessor());
 		testAnalyzers.add(new ControlFlowProcessor());
 		testAnalyzers.add(new AnyStatementExecuted());
+	}
 
+	protected void loadDefaulOutputs() {
 		outputs.add(new JSonResultOriginal());
 		outputs.add(new RefactorOutput());
 		outputs.add(new PrinterOutResultOriginal());
+	}
 
-		String analyzers = ConfigurationProperties.getProperty("analyzers");
-		if (analyzers != null && !analyzers.isEmpty()) {
-			String[] operators = analyzers.split(File.pathSeparator);
-			for (String op : operators) {
-				TestAnalyzer aop = (TestAnalyzer) PlugInLoader.loadPlugin(op, TestAnalyzer.class);
-				if (aop != null)
-					testAnalyzers.add(aop);
-			}
-		}
-
+	protected void loadCustomizeOutputs() throws Exception {
 		String outputsP = ConfigurationProperties.getProperty("outputs");
 		if (outputsP != null && !outputsP.isEmpty()) {
 			String[] operators = outputsP.split(File.pathSeparator);
@@ -126,10 +147,19 @@ public class RtEngine extends AstorCoreEngine {
 					this.outputs.add(aop);
 			}
 		}
-
 	}
 
-	Exception exceptionReceived = null;
+	protected void loadCustomizeAnalyzers() throws Exception {
+		String analyzers = ConfigurationProperties.getProperty("analyzers");
+		if (analyzers != null && !analyzers.isEmpty()) {
+			String[] operators = analyzers.split(File.pathSeparator);
+			for (String op : operators) {
+				TestAnalyzer aop = (TestAnalyzer) PlugInLoader.loadPlugin(op, TestAnalyzer.class);
+				if (aop != null)
+					testAnalyzers.add(aop);
+			}
+		}
+	}
 
 	/**
 	 * Execute the test cases from the application under analysis
@@ -139,16 +169,71 @@ public class RtEngine extends AstorCoreEngine {
 	 */
 	public DynamicTestInformation runTests() throws Exception {
 
-		this.loadFaultLocalization();
+		List<String> testsToRun = this.testExecutor.findTestCasesToExecute(projectFacade);
+		// TODO: remove
+		projectFacade.getProperties().setRegressionCases(testsToRun);
 
-		this.loadValidator();
+		FaultLocalizationResult result = this.testExecutor.runTests(getProjectFacade(), testsToRun);
 
-		List<SuspiciousCode> suspicious = this.calculateSuspicious();
+		List<SuspiciousCode> suspicious = result.getCandidates();
 
-		List<String> testToRun = projectFacade.getProperties().getRegressionTestCases();
-		dynamicInfo = new DynamicTestInformation(suspicious, testToRun);
+		dynamicInfo = new DynamicTestInformation(suspicious, testsToRun);
 		return dynamicInfo;
 
+	}
+
+	protected void loadTestCasesExecutorForDynamicAnalysis() throws Exception {
+
+		String testExecutorStg = ConfigurationProperties.getProperty("testexecutor");
+		if (testExecutorStg == null || testExecutorStg.isEmpty()) {
+			testExecutorStg = ConfigurationProperties.getProperty("faultlocalization").toLowerCase();
+
+		}
+
+		try {
+			// Try to load
+			testExecutor = (TestCaseExecutor) PlugInLoader.loadPlugin(testExecutorStg, TestCaseExecutor.class);
+
+		} catch (Exception e) {
+			// nothing
+		}
+
+		if (testExecutor == null) {
+			testExecutor = loadFaultLocalization(testExecutorStg);
+
+		}
+
+		//
+		if (testExecutor == null) {
+			//
+			throw new IllegalAccessException("Imposible to configure test executor: " + testExecutorStg);
+		}
+
+	}
+
+	protected TestCaseExecutor loadFaultLocalization(String testExecutor) throws Exception {
+
+		FaultLocalizationStrategy fl = null;
+		if (testExecutor.equals("gzoltar")) {
+			fl = (new GZoltarFaultLocalization());
+		} else if (testExecutor.equals("cocospoon")) {
+			fl = new CocoFaultLocalization();
+		} else {
+			try {
+				fl = (FaultLocalizationStrategy) PlugInLoader.loadPlugin(testExecutor,
+						ExtensionPoints.FAULT_LOCALIZATION._class);
+
+			} catch (Exception e) {
+				// The argument is not FL
+				return null;
+			}
+		}
+
+		if (fl != null) {
+			TestCaseExecutor tce = new TestExecutorWrapperFaultLocalization(fl);
+			return tce;
+		}
+		return null;
 	}
 
 	/**
@@ -177,17 +262,16 @@ public class RtEngine extends AstorCoreEngine {
 			exceptionReceived = new Exception("No test can be found");
 		} else {
 
-			if (!ConfigurationProperties.getPropertyBool("skipanalysis")) {
-				try {
-					RuntimeInformation ri = computeDynamicInformation(model, dynamicInfo);
-					analyzeTestSuiteExecution(model, ri);
+			try {
+				RuntimeInformation ri = computeDynamicInformation(model, dynamicInfo);
+				analyzeTestSuiteExecution(model, ri);
 
-				} catch (Exception e) {
-					e.printStackTrace();
-					log.error(e);
-					exceptionReceived = e;
-				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				log.error(e);
+				exceptionReceived = e;
 			}
+
 		}
 	}
 
@@ -532,6 +616,14 @@ public class RtEngine extends AstorCoreEngine {
 
 	public void setTestAnalyzers(List<TestAnalyzer> testAnalyzers) {
 		this.testAnalyzers = testAnalyzers;
+	}
+
+	public TestCaseExecutor getTestExecutor() {
+		return testExecutor;
+	}
+
+	public void setTestExecutor(TestCaseExecutor testExecutor) {
+		this.testExecutor = testExecutor;
 	}
 
 }
