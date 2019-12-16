@@ -34,6 +34,13 @@
 	
 	
 	<repositories>
+	
+		<repository>
+			<id>tdurieux.github.io/maven-repository/snapshots/</id>
+			<name>tdurieux.github.io maven-repository</name>
+			<url>https://tdurieux.github.io/maven-repository/snapshots/</url>
+		</repository>
+		
 		<repository>
 			<id>inria</id>
 			<url>http://spoon.gforge.inria.fr/repositories/releases/</url>
@@ -64,11 +71,7 @@
 			<snapshots />
 		</repository>
 
-		<repository>
-			<id>tdurieux.github.io/maven-repository/snapshots/</id>
-			<name>tdurieux.github.io maven-repository</name>
-			<url>https://tdurieux.github.io/maven-repository/snapshots/</url>
-		</repository>
+	
 
 		<repository>
 			<id>maven.inria.fr-snapshot</id>
