@@ -28,7 +28,7 @@
 		<dependency>
 			<groupId>org.inria.sacha.automaticRepair</groupId>
 			<artifactId>astor</artifactId>
-			<version>1.0.0-SNAPSHOT</version>
+			<version>1.0.0-20191216.112915-1</version>
 		</dependency>
 	</dependencies>
 	

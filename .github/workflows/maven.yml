@@ -13,8 +13,12 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 1.8
+    
+    - name: install mvn-info
+      run: mvn org.apache.maven.plugins:maven-dependency-plugin:3.1.1:get -DremoteRepositories=https://tdurieux.github.io/maven-repository/snapshots/ -Dartifact=com.github.tdurieux:project-config-maven-plugin:1.0-SNAPSHOT;
+    
     - name: Setup project to test
-      run: cd examples/rt-project; pwd; mvn test; cd ../..;
+      run: cd examples/rt-project; pwd; mvn test; ls target/;cd ../..;
        
     - name: Build with Maven
       run: mvn -B package --file pom.xml
