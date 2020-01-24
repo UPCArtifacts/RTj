@@ -29,4 +29,10 @@ public class RTFRow32Purity extends AbstractRTestCase {
 		assertTrue(v == 2);
 	}
 
+	@Test
+	public void test3() {
+		Person p = new Person();
+		int v = p.run();
+		assertTrue(v == 2);
+	}
 }

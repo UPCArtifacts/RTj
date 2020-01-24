@@ -210,10 +210,25 @@ public class TestIntermediateAnalysisResult extends GenericTestAnalysisResults {
 
 		List<Skip> skipsExecutedFromTest = this.getSkipsExecuted();
 
-		return new TestAnalysisResult(notComplexHelperCallComplex, notComplexHelperAssertComplex,
-				notComplexAssertComplex, smokeTest, allMissedFail, allRedundant, resultNotExecutedHelperCallComplex,
-				resultNotExecutedHelperAssertComplex, resultNotExecutedAssertComplex, allOtherMIFromTest,
-				skipsExecutedFromTest);
+		List<?> empty = Collections.EMPTY_LIST;
+		if (skipsExecutedFromTest.size() > 0) {
+			// if test has skip, we ignore other types
+			return new TestAnalysisResult(
+					//// Ignoring Fully
+					(List<Helper>) empty, (List<Helper>) empty, (List<AsAssertion>) empty, smokeTest, allMissedFail,
+					allRedundant,
+					// Ignoring Context Dep
+					(List<Helper>) empty, (List<Helper>) empty, (List<AsAssertion>) empty,
+					//
+					allOtherMIFromTest, skipsExecutedFromTest);
+
+		} else {
+
+			return new TestAnalysisResult(notComplexHelperCallComplex, notComplexHelperAssertComplex,
+					notComplexAssertComplex, smokeTest, allMissedFail, allRedundant, resultNotExecutedHelperCallComplex,
+					resultNotExecutedHelperAssertComplex, resultNotExecutedAssertComplex, allOtherMIFromTest,
+					skipsExecutedFromTest);
+		}
 
 	}
 

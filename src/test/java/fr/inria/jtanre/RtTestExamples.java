@@ -21,6 +21,7 @@ import fr.inria.jtanre.rt.RtMain;
 import fr.inria.jtanre.rt.core.RuntimeInformation;
 import fr.inria.jtanre.rt.core.TestAnalysisResult;
 import fr.inria.jtanre.rt.core.TestIntermediateAnalysisResult;
+import fr.inria.jtanre.rt.core.coverage.FLWrapper;
 import fr.inria.jtanre.rt.elements.AsAssertion;
 import fr.inria.jtanre.rt.elements.Helper;
 import fr.inria.main.CommandSummary;
@@ -1763,7 +1764,8 @@ public class RtTestExamples {
 		assertTrue(finalResult.skip.size() > 0);
 		assertTrue(finalResult.fullRottenHelperAssert.isEmpty());
 		assertTrue(finalResult.contextHelperAssertion.isEmpty());
-		assertTrue(finalResult.fullRottenAssert.size() > 0);
+		// When we return, we don't count as Fully
+		assertTrue(finalResult.fullRottenAssert.isEmpty());
 		assertTrue(finalResult.fullRottenHelperCall.isEmpty());
 
 		////
@@ -1917,6 +1919,8 @@ public class RtTestExamples {
 		cs.command.put("-mode", "rt");
 		cs.command.put("-printrottentest", "true");
 		cs.command.put("-autoconfigure", "false");
+		//
+		cs.command.put("-testexecutor", FLWrapper.class.getCanonicalName());
 
 		main1.execute(cs.flat());
 		RtEngine etEn = (RtEngine) main1.getEngine();
@@ -1940,6 +1944,8 @@ public class RtTestExamples {
 		cs.command.put("-mode", "rt");
 		cs.command.put("-parameters", "skipanalysis:true");
 		cs.command.put("-autoconfigure", "false");
+
+		cs.command.put("-testexecutor", FLWrapper.class.getCanonicalName());
 
 		main1.execute(cs.flat());
 		RtEngine etEn = (RtEngine) main1.getEngine();
