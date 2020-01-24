@@ -3,10 +3,13 @@ package fr.inria.jtanre.rt;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import fr.inria.astor.core.entities.ProgramVariant;
 import fr.inria.astor.core.faultlocalization.FaultLocalizationResult;
@@ -170,6 +173,10 @@ public class RtEngine extends AstorCoreEngine {
 	public DynamicTestInformation runTests() throws Exception {
 
 		List<String> testsToRun = this.testExecutor.findTestCasesToExecute(projectFacade);
+
+		Set<String> duplicates = testsToRun.stream().filter(i -> Collections.frequency(testsToRun, i) > 1)
+				.collect(Collectors.toSet());
+
 		// TODO: remove
 		projectFacade.getProperties().setRegressionCases(testsToRun);
 
@@ -186,7 +193,11 @@ public class RtEngine extends AstorCoreEngine {
 
 		String testExecutorStg = ConfigurationProperties.getProperty("testexecutor");
 		if (testExecutorStg == null || testExecutorStg.isEmpty()) {
+
+			// TODO:
 			testExecutorStg = ConfigurationProperties.getProperty("faultlocalization").toLowerCase();
+
+			// testExecutorStg = FLWrapper.class.getCanonicalName();
 
 		}
 
@@ -199,6 +210,8 @@ public class RtEngine extends AstorCoreEngine {
 		}
 
 		if (testExecutor == null) {
+			testExecutorStg = ConfigurationProperties.getProperty("faultlocalization").toLowerCase();
+
 			testExecutor = loadFaultLocalization(testExecutorStg);
 
 		}
@@ -286,6 +299,7 @@ public class RtEngine extends AstorCoreEngine {
 		List<String> allTestCasesWithoutParent = this.getProjectFacade().getProperties().getRegressionTestCases();
 
 		for (String tc : allTestCasesWithoutParent) {
+
 			allTestCases.add(tc);
 			CtClass aTestModelCtClass = MutationSupporter.getFactory().Class().get(tc);
 
@@ -432,6 +446,8 @@ public class RtEngine extends AstorCoreEngine {
 
 		TestIntermediateAnalysisResult resultTestCase = processTest(model, aTestMethodFromClass, aNameOfTestClass,
 				aTestModelCtClass, runtimeinfo);
+
+		this.resultByTest.add(resultTestCase);
 
 		return resultTestCase;
 
