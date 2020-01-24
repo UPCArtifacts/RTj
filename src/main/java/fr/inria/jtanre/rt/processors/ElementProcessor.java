@@ -334,10 +334,12 @@ public abstract class ElementProcessor<T, C> implements TestAnalyzer<T, C, CtCla
 		return isCovered(cacheSuspicious, elementToCheck, ctclassFromElementToCheck, aTestModelCtClass);
 	}
 
+	@Deprecated
 	protected String keySignatureExecuted(SuspiciousCode e) {
 		return keySignatureExecuted(e.getClassName(), getTestCaseMethodName(e));
 	}
 
+	@Deprecated
 	protected String getTestCaseMethodName(SuspiciousCode e) {
 		// We only consider a method name, which, at least in JUnit, must be unique (we
 		// cannot have two test methods with the same name)
