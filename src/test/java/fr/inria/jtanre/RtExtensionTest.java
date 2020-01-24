@@ -13,6 +13,8 @@ import java.util.stream.Collectors;
 import org.apache.log4j.Logger;
 import org.junit.Test;
 
+import fr.inria.astor.core.faultlocalization.FaultLocalizationResult;
+import fr.inria.astor.core.faultlocalization.entity.SuspiciousCode;
 import fr.inria.astor.core.faultlocalization.gzoltar.GZoltarFaultLocalization;
 import fr.inria.astor.core.setup.ConfigurationProperties;
 import fr.inria.jtanre.extension4test.TestAnalyzerTest;
@@ -22,6 +24,7 @@ import fr.inria.jtanre.rt.RtEngine;
 import fr.inria.jtanre.rt.RtMain;
 import fr.inria.jtanre.rt.core.RuntimeInformation;
 import fr.inria.jtanre.rt.core.TestIntermediateAnalysisResult;
+import fr.inria.jtanre.rt.core.coverage.FLWrapper;
 import fr.inria.jtanre.rt.core.dynamic.TestExecutorWrapperFaultLocalization;
 import fr.inria.main.CommandSummary;
 
@@ -171,6 +174,32 @@ public class RtExtensionTest {
 		// cs.command.put("-analyzers", TestAnalyzerTest.class.getCanonicalName());
 		// cs.command.put("-outputs", TestRtOutput.class.getCanonicalName());
 		return cs;
+	}
+
+	@Test
+	public void testLoadTestFaultLocalizationNewImplementation() throws Exception {
+		RtMain main1 = new RtMain();
+		CommandSummary cs = command1();
+
+		cs.command.put("-testexecutor", FLWrapper.class.getCanonicalName());
+
+		main1.execute(cs.flat());
+
+		RtEngine etEn = (RtEngine) main1.getEngine();
+
+		assertTrue(etEn.getTestExecutor() instanceof FLWrapper);
+
+		FLWrapper fl = (FLWrapper) etEn.getTestExecutor();
+
+		FaultLocalizationResult result = fl.runTests(etEn.getProjectFacade(), null);
+
+		List<SuspiciousCode> covered = result.getCandidates();
+		System.out.println("--> covered: " + covered);
+		for (SuspiciousCode suspiciousCode : covered) {
+			System.out.println(
+					"-> " + suspiciousCode.getClassName() + " line " + suspiciousCode.getLineNumber() + " covered by: ("
+							+ suspiciousCode.getCoveredByTests().size() + ") " + suspiciousCode.getCoveredByTests());
+		}
 	}
 
 }

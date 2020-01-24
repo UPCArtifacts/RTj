@@ -28,7 +28,8 @@ public class TestExecutorWrapperFaultLocalization implements TestCaseExecutor {
 
 	@Override
 	public List<String> findTestCasesToExecute(ProjectRepairFacade projectFacade) {
-		return this.faultLocalization.findTestCasesToExecute(projectFacade);
+		List<String> tests = this.faultLocalization.findTestCasesToExecute(projectFacade);
+		return tests;
 	}
 
 	public FaultLocalizationStrategy getFaultLocalization() {
