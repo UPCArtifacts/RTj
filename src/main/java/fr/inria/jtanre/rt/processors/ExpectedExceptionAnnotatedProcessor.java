@@ -15,8 +15,8 @@ import spoon.reflect.declaration.CtExecutable;
 public class ExpectedExceptionAnnotatedProcessor extends ElementProcessor<String, Object> {
 
 	@Override
-	public List<String> findElements(Map<String, List<?>> previousPartialResults, List<CtStatement> stmts,
-			CtExecutable testMethodModel, List<CtClass> allClasses) {
+	public List<String> findElements(Map<String, List<?>> previousPartialResults, CtClass aTestModelCtClass,
+			List<CtStatement> stmts, CtExecutable testMethodModel, List<CtClass> allClasses) {
 		List<String> expectException = expectEx(testMethodModel);
 
 		return expectException;

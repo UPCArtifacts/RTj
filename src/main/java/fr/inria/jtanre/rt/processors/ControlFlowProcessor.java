@@ -22,8 +22,8 @@ import spoon.reflect.visitor.filter.TypeFilter;
 public class ControlFlowProcessor extends ElementProcessor<Boolean, Object> {
 
 	@Override
-	public List<Boolean> findElements(Map<String, List<?>> previousPartialResults, List<CtStatement> stmts,
-			CtExecutable testMethodModel, List<CtClass> allClasses) {
+	public List<Boolean> findElements(Map<String, List<?>> previousPartialResults, CtClass aTestModelCtClass,
+			List<CtStatement> stmts, CtExecutable testMethodModel, List<CtClass> allClasses) {
 
 		return Arrays.asList(hasControlFlow(testMethodModel));
 	}

@@ -1871,6 +1871,25 @@ public class RtTestExamples {
 
 	}
 
+	@Test
+	public void testRTFRow33OverrideTest() throws Exception {
+		RtEngine etEn = detectRtSkip();
+
+		List<TestIntermediateAnalysisResult> resultByTest = etEn.getResultByTest();
+		assertNotNull(resultByTest);
+
+		RuntimeInformation dynInf = etEn.computeDynamicInformation();
+
+		// First case: not executed a method inv
+		TestIntermediateAnalysisResult rottenTest0 = etEn.processSingleTest(dynInf,
+				"RottenTestsFinder.FakePaperTests.RTFRow33Override", "test0");
+
+		assertNotNull(rottenTest0);
+
+		assertFalse(rottenTest0.isRotten());
+
+	}
+
 	private void checkFp(List<TestIntermediateAnalysisResult> tc, boolean toverif, String testname) {
 		Optional<TestIntermediateAnalysisResult> rotten01 = tc.stream()
 				.filter(e -> e.getTestMethodFromClass().equals(testname)).findFirst();

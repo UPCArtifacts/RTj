@@ -54,7 +54,7 @@ public class FLWrapper implements TestCaseExecutor {
 
 		for (String line : susp.keySet()) {
 			double suspvalue = susp.get(line);
-			System.out.println(" " + line + " " + susp.get(line));
+			// System.out.println(" " + line + " " + susp.get(line));
 			String[] sp = line.split("_");
 			String className = sp[0].replace(File.separator, ".");
 			Integer lineNumber = new Integer(sp[1]);

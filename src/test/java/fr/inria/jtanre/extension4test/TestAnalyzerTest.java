@@ -26,7 +26,8 @@ public class TestAnalyzerTest<T, C, MC> implements TestAnalyzer {
 	}
 
 	@Override
-	public List findElements(Map previousPartialResults, List stmts, CtExecutable testMethodModel, List allClasses) {
+	public List findElements(Map previousPartialResults, CtClass aTestModelCtClass, List stmts,
+			CtExecutable testMethodModel, List allClasses) {
 		// TODO Auto-generated method stub
 		return null;
 	}

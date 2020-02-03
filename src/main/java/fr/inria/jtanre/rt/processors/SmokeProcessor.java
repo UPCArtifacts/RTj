@@ -16,8 +16,8 @@ import spoon.reflect.visitor.filter.TypeFilter;
 public class SmokeProcessor extends ElementProcessor<CtInvocation, Object> {
 
 	@Override
-	public List<CtInvocation> findElements(Map<String, List<?>> previousPartialResults, List<CtStatement> stmts,
-			CtExecutable testMethodModel, List<CtClass> allClasses) {
+	public List<CtInvocation> findElements(Map<String, List<?>> previousPartialResults, CtClass aTestModelCtClass,
+			List<CtStatement> stmts, CtExecutable testMethodModel, List<CtClass> allClasses) {
 
 		List<CtInvocation> allAssertionsFromTest = (List<CtInvocation>) ((ResultMap) previousPartialResults)
 				.get(AssertionProcessor.class);

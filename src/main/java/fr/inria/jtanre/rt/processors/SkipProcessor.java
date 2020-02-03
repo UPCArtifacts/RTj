@@ -50,8 +50,8 @@ public class SkipProcessor extends ElementProcessor<CtReturn, Skip> {
 	}
 
 	@Override
-	public List<CtReturn> findElements(Map<String, List<?>> previousPartialResults, List<CtStatement> stmts,
-			CtExecutable testMethodModel, List<CtClass> allClasses) {
+	public List<CtReturn> findElements(Map<String, List<?>> previousPartialResults, CtClass aTestModelCtClass,
+			List<CtStatement> stmts, CtExecutable testMethodModel, List<CtClass> allClasses) {
 		return filterSkips(stmts, testMethodModel, allClasses);
 	}
 

@@ -21,8 +21,8 @@ import spoon.reflect.declaration.CtExecutable;
  */
 public interface TestAnalyzer<T, C, MC> extends AstorExtensionPoint {
 
-	public List<T> findElements(Map<String, List<?>> previousPartialResults, List<CtStatement> stmts,
-			CtExecutable testMethodModel, List<CtClass> allClasses);
+	public List<T> findElements(Map<String, List<?>> previousPartialResults,
+			CtClass aTestModelCtClass, List<CtStatement> stmts, CtExecutable testMethodModel, List<CtClass> allClasses);
 
 	public Classification<C> classifyElements(ResultMap<Classification<?>> previousDynamic,
 			/* CtClass */MC testClassdModel, CtExecutable testMethodModel,

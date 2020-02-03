@@ -29,8 +29,8 @@ public class AssertionProcessor extends ElementProcessor<CtInvocation, AsAsserti
 	}
 
 	@Override
-	public List<CtInvocation> findElements(Map<String, List<?>> previousPartialResults, List<CtStatement> stmts,
-			CtExecutable testMethodModel, List<CtClass> allClasses) {
+	public List<CtInvocation> findElements(Map<String, List<?>> previousPartialResults, CtClass aTestModelCtClass,
+			List<CtStatement> stmts, CtExecutable testMethodModel, List<CtClass> allClasses) {
 		return filterAssertions(stmts);
 	}
 

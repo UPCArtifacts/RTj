@@ -466,6 +466,7 @@ public class RtEngine extends AstorCoreEngine {
 		ResultMap<List<?>> partialStaticResults = new ResultMap<List<?>>();
 		ResultMap<Classification<?>> partialDynamicResults = new ResultMap<Classification<?>>();
 
+		// Move outside
 		List<CtClass> allClasses = getClasses(aTestModelCtClass);
 
 		Optional<CtExecutableReference<?>> testMethodOp = aTestModelCtClass.getAllExecutables().stream()
@@ -496,8 +497,8 @@ public class RtEngine extends AstorCoreEngine {
 
 		for (TestAnalyzer elementProcessor : this.testAnalyzers) {
 
-			List<?> retrievedElements = elementProcessor.findElements(partialStaticResults, allStmtsFromClass,
-					testMethodModel, allClasses);
+			List<?> retrievedElements = elementProcessor.findElements(partialStaticResults, aTestModelCtClass,
+					allStmtsFromClass, testMethodModel, allClasses);
 			partialStaticResults.put(elementProcessor.getClass(), retrievedElements);
 		}
 

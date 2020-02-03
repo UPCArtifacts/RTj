@@ -13,15 +13,23 @@ import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtExecutable;
+import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.visitor.filter.LineFilter;
+import spoon.support.visitor.ClassTypingContext;
 
 public abstract class HelperProcessor extends ElementProcessor<Helper, Helper> {
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public List<Helper> findElements(Map<String, List<?>> previousPartialResults, List<CtStatement> stmts,
-			CtExecutable testMethodModel, List<CtClass> allClasses) {
-		return filterHelper(stmts, new ArrayList());
+	public List<Helper> findElements(Map<String, List<?>> previousPartialResults, CtClass aTestModelCtClass,
+			List<CtStatement> stmts, CtExecutable testMethodModel, List<CtClass> allClasses) {
+		if (stmts.size() > 0) {
+			// To retrieve the parent, we take the first one
+			CtClass type = (CtClass) stmts.get(0).getParent(CtClass.class);
+			return filterHelper(aTestModelCtClass, stmts, new ArrayList());
+		}
+		return null;
 	}
 
 	/**
@@ -31,7 +39,8 @@ public abstract class HelperProcessor extends ElementProcessor<Helper, Helper> {
 	 * @param testMethodModel
 	 * @return
 	 */
-	private List<Helper> filterHelper(List<CtStatement> allStmtsFromClass, List<CtExecutable> calls) {
+	private List<Helper> filterHelper(CtClass aTestModelCtClass, List<CtStatement> allStmtsFromClass,
+			List<CtExecutable> calls) {
 		List<Helper> helpersMined = new ArrayList<>();
 		// for each statement, let's find which one is a helper
 		for (CtStatement targetElement : allStmtsFromClass) {
@@ -42,16 +51,40 @@ public abstract class HelperProcessor extends ElementProcessor<Helper, Helper> {
 						&& targetInvocation.getExecutable().getDeclaration() != null) {
 
 					// Let's find the called method to see if it has assertions
+					// This executable can be declared in the parent
 					CtExecutable methodDeclaration = targetInvocation.getExecutable().getDeclaration();
 
 					if (methodDeclaration.getBody() == null) {
 						continue;
 					}
-
+					// To avoid recursivity
 					if (calls.contains(methodDeclaration)) {
 
 						continue;
 					}
+
+					// the invocation is to a method
+					if (methodDeclaration instanceof CtMethod) {
+						CtMethod mdx = (CtMethod) methodDeclaration;
+						// let's find if the method is override
+
+						final ClassTypingContext context = new ClassTypingContext(aTestModelCtClass);
+
+						// For each method from the Test class
+						for (Object mo : aTestModelCtClass.getMethods()) {
+
+							if (mo instanceof CtMethod) {
+								CtMethod mthis = (CtMethod) mo;
+								if (checkOverride(context, mdx, (CtMethod) mthis)) {
+									// we found the method that overrides that one invoked.
+									methodDeclaration = (mthis);
+									break;
+								}
+							}
+						}
+
+					}
+
 					// All the statements from the method that is invoked
 					List<CtStatement> statementsFromMethod = methodDeclaration.getBody().getElements(new LineFilter());
 
@@ -73,7 +106,8 @@ public abstract class HelperProcessor extends ElementProcessor<Helper, Helper> {
 						List<CtExecutable> previouscalls = new ArrayList<>(calls);
 						previouscalls.add(methodDeclaration);
 						// we find if the body calls to another helper, recursively
-						List<Helper> helpersFromInvocation = filterHelper(statementsFromMethod, previouscalls);
+						List<Helper> helpersFromInvocation = filterHelper(aTestModelCtClass, statementsFromMethod,
+								previouscalls);
 						// we add to the results
 						helpersMined.addAll(helpersFromInvocation);
 						// We update the helper to include the calls.
@@ -82,7 +116,8 @@ public abstract class HelperProcessor extends ElementProcessor<Helper, Helper> {
 							aHelper.getCalls().add(0, targetInvocation);
 						}
 					} catch (Throwable l) {
-						System.out.println("error ");
+						System.out.println("error: " + l.getMessage());
+						l.printStackTrace();
 					}
 				}
 			}
@@ -122,6 +157,16 @@ public abstract class HelperProcessor extends ElementProcessor<Helper, Helper> {
 			}
 		}
 		return helpersMined;
+	}
+
+	private boolean checkOverride(ClassTypingContext context, CtMethod mthis, CtMethod mthat) {
+		try {
+			// TODO: check bug when hierarchy is larger than 2.
+			return context.isOverriding(mthis, mthat);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 
 	protected Classification<Helper> classifyHelpersAssertionExecution(CtClass aTestModelCtClass,
