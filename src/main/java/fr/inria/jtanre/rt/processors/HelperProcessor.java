@@ -78,7 +78,7 @@ public abstract class HelperProcessor extends ElementProcessor<Helper, Helper> {
 								if (checkOverride(context, mdx, (CtMethod) mthis)) {
 									// we found the method that overrides that one invoked.
 									methodDeclaration = (mthis);
-									break;
+									// break;
 								}
 							}
 						}
@@ -164,7 +164,8 @@ public abstract class HelperProcessor extends ElementProcessor<Helper, Helper> {
 			// TODO: check bug when hierarchy is larger than 2.
 			return context.isOverriding(mthis, mthat);
 		} catch (Exception e) {
-			e.printStackTrace();
+			// e.printStackTrace();
+			// System.err.println("Error checking override " + e.getMessage());
 			return false;
 		}
 	}
@@ -174,23 +175,25 @@ public abstract class HelperProcessor extends ElementProcessor<Helper, Helper> {
 			CtExecutable methodTestExecuted, boolean checkAssertion) {
 
 		Classification<Helper> result = new Classification();
-		for (Helper aHelper : allHelperInvocationFromTest) {
+		if (allHelperInvocationFromTest != null) {
+			for (Helper aHelper : allHelperInvocationFromTest) {
 
-			CtInvocation assertion = (checkAssertion) ? aHelper.getAssertion().getCtAssertion()
-					: aHelper.getCalls().get(0);
-			CtClass ctclassFromAssert = assertion.getParent(CtClass.class);
+				CtInvocation assertion = (checkAssertion) ? aHelper.getAssertion().getCtAssertion()
+						: aHelper.getCalls().get(0);
+				CtClass ctclassFromAssert = assertion.getParent(CtClass.class);
 
-			boolean covered = isCovered(cacheSuspicious, assertion, ctclassFromAssert, aTestModelCtClass,
-					methodTestExecuted);
+				boolean covered = isCovered(cacheSuspicious, assertion, ctclassFromAssert, aTestModelCtClass,
+						methodTestExecuted);
 
-			if (!covered) {
-				result.getResultNotExecuted().add(aHelper);
-				if (checkAssertion)
-					aHelper.unexecutedAssert = true;
-				else
-					aHelper.unexecutedCall = true;
-			} else {
-				result.getResultExecuted().add(aHelper);
+				if (!covered) {
+					result.getResultNotExecuted().add(aHelper);
+					if (checkAssertion)
+						aHelper.unexecutedAssert = true;
+					else
+						aHelper.unexecutedCall = true;
+				} else {
+					result.getResultExecuted().add(aHelper);
+				}
 			}
 		}
 		return result;

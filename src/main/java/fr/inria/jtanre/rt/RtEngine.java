@@ -405,11 +405,14 @@ public class RtEngine extends AstorCoreEngine {
 			}
 
 			for (String aTestMethodFromClass : testMethodsFromClass) {
-
-				TestIntermediateAnalysisResult resultTestCase = processTest(model, aTestMethodFromClass,
-						aNameOfTestClass, aTestModelCtClass, runtimeinfo);
-				if (resultTestCase != null) {
-					resultByTest.add(resultTestCase);
+				try {
+					TestIntermediateAnalysisResult resultTestCase = processTest(model, aTestMethodFromClass,
+							aNameOfTestClass, aTestModelCtClass, runtimeinfo);
+					if (resultTestCase != null) {
+						resultByTest.add(resultTestCase);
+					}
+				} catch (Exception e) {
+					System.err.println("Error processing test " + aTestMethodFromClass);
 				}
 			}
 		}
