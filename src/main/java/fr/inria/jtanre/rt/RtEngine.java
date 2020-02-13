@@ -378,8 +378,9 @@ public class RtEngine extends AstorCoreEngine {
 				notexec.add(test);
 			}
 		}
+
 		if (!notexec.isEmpty()) {
-			log.error("nr test not ex " + notexec.size());
+			log.error("Tests not executed (due to errors) " + notexec.size() + "/" + allTestCases.size());
 		}
 
 		resultByTest = new ArrayList<>();

@@ -87,8 +87,7 @@ public class FLWrapper implements TestCaseExecutor {
 	public List<String> findTestCasesToExecute(ProjectRepairFacade projectFacade) {
 		List<TestTuple> tests = testDetector.findTest(MutationSupporter.getFactory());
 
-		return tests.parallelStream().map(e -> e.testClassToBeAmplified.getQualifiedName())
-				.collect(Collectors.toList());
+		return tests.parallelStream().map(e -> e.testClassToBeAmplified).collect(Collectors.toList());
 	}
 
 }
