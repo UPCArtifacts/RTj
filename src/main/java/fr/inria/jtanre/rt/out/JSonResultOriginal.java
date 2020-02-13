@@ -82,7 +82,7 @@ public class JSonResultOriginal implements RtOutput {
 		return root;
 	}
 
-	public JsonObject toJson(String name, ProjectRepairFacade projectFacade,
+	public JsonObject toJson(RtEngine engine, String name, ProjectRepairFacade projectFacade,
 			List<TestIntermediateAnalysisResult> resultByTest) {
 
 		this.projectFacade = projectFacade;
@@ -110,6 +110,9 @@ public class JSonResultOriginal implements RtOutput {
 		boolean analyzeSmoke = ConfigurationProperties.getPropertyBool("include_smoke");
 		boolean analyzeRedundant = ConfigurationProperties.getPropertyBool("include_redundant_assertions");
 		boolean analyzeExceptions = ConfigurationProperties.getPropertyBool("include_exceptions");
+
+		JsonObject testInfo = new JsonObject();
+		root.add("test", testInfo);
 
 		StringBuffer sb = new StringBuffer();
 
@@ -349,6 +352,8 @@ public class JSonResultOriginal implements RtOutput {
 			}
 		}
 
+		summary.addProperty("time_tests_exec_sec", engine.getExecutionTimeTests() / 1000);
+		summary.addProperty("time_analysis_exec_sec", engine.getExecutionTimeAnalyzers() / 1000);
 		summary.addProperty("name", projectName);
 		summary.addProperty("remote", remote);
 		summary.addProperty("local_location", location);
@@ -361,6 +366,8 @@ public class JSonResultOriginal implements RtOutput {
 		Collection<CtPackage> packages = MutationSupporter.getFactory().Package().getAll();
 
 		summary.addProperty("nr_packages", packages.size());
+		addTestCases(testInfo, resultByTest);
+		addTestClasses(testInfo, projectFacade.getProperties().getRegressionTestCases());
 
 		Collection<CtType<?>> typesspoon = MutationSupporter.getFactory().Type().getAll();
 		summary.addProperty("nr_classes", typesspoon.size());
@@ -382,6 +389,26 @@ public class JSonResultOriginal implements RtOutput {
 			summary.addProperty("nr_" + TEST_WITH_REDUNDANT_ASSERTION, nrAllRedundant);
 
 		return root;
+	}
+
+	private void addTestClasses(JsonObject summary, List<String> regressionTestCases) {
+		JsonArray tc = new JsonArray();
+		summary.add("testclasses", tc);
+
+		for (String test : regressionTestCases) {
+			tc.add(test);
+		}
+	}
+
+	private void addTestCases(JsonObject summary, List<TestIntermediateAnalysisResult> resultByTest) {
+		JsonArray tc = new JsonArray();
+		summary.add("testcases", tc);
+
+		for (TestIntermediateAnalysisResult testIntermediateAnalysisResult : resultByTest) {
+			tc.add(testIntermediateAnalysisResult.getNameOfTestClass() + "_"
+					+ testIntermediateAnalysisResult.getTestMethodFromClass());
+		}
+
 	}
 
 	public int getPosition(CtElement inv) {
@@ -644,7 +671,7 @@ public class JSonResultOriginal implements RtOutput {
 		this.projectFacade = projectFacade;
 		JsonObject json = null;
 		if (exceptionReceived == null) {
-			json = this.toJson(id, this.projectFacade, resultByTest);
+			json = this.toJson(engine, id, this.projectFacade, resultByTest);
 
 		} else {
 			json = this.toJsonError(id, this.projectFacade, exceptionReceived);

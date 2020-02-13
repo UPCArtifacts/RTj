@@ -3,13 +3,11 @@ package fr.inria.jtanre.rt;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import fr.inria.astor.core.entities.ProgramVariant;
 import fr.inria.astor.core.faultlocalization.FaultLocalizationResult;
@@ -67,6 +65,9 @@ import spoon.support.reflect.declaration.CtClassImpl;
  *
  */
 public class RtEngine extends AstorCoreEngine {
+
+	long executionTimeTests = -1;
+	long executionTimeAnalyzers = -1;
 
 	public List<TestIntermediateAnalysisResult> resultByTest = new ArrayList<>();
 
@@ -172,10 +173,13 @@ public class RtEngine extends AstorCoreEngine {
 	 */
 	public DynamicTestInformation runTests() throws Exception {
 
+		long tinitExec = (new Date()).getTime();
+
 		List<String> testsToRun = this.testExecutor.findTestCasesToExecute(projectFacade);
 
-		Set<String> duplicates = testsToRun.stream().filter(i -> Collections.frequency(testsToRun, i) > 1)
-				.collect(Collectors.toSet());
+		// Set<String> duplicates = testsToRun.stream().filter(i ->
+		// Collections.frequency(testsToRun, i) > 1)
+		// .collect(Collectors.toSet());
 
 		// TODO: remove
 		projectFacade.getProperties().setRegressionCases(testsToRun);
@@ -185,6 +189,11 @@ public class RtEngine extends AstorCoreEngine {
 		List<SuspiciousCode> suspicious = result.getCandidates();
 
 		dynamicInfo = new DynamicTestInformation(suspicious, testsToRun);
+
+		long tEndExec = (new Date()).getTime();
+
+		this.executionTimeTests = tEndExec - tinitExec;
+
 		return dynamicInfo;
 
 	}
@@ -194,7 +203,6 @@ public class RtEngine extends AstorCoreEngine {
 		String testExecutorStg = ConfigurationProperties.getProperty("testexecutor");
 		if (testExecutorStg == null || testExecutorStg.isEmpty()) {
 
-			// TODO:
 			testExecutorStg = ConfigurationProperties.getProperty("faultlocalization").toLowerCase();
 
 			// testExecutorStg = FLWrapper.class.getCanonicalName();
@@ -269,7 +277,7 @@ public class RtEngine extends AstorCoreEngine {
 	 * @throws Exception
 	 */
 	public void runTestAnalyzers(ProgramModel model, DynamicTestInformation dynamicInfo) throws Exception {
-
+		long tinitExec = (new Date()).getTime();
 		if (dynamicInfo.getTestExecuted().isEmpty()) {
 			log.error("No test can be found");
 			exceptionReceived = new Exception("No test can be found");
@@ -286,6 +294,10 @@ public class RtEngine extends AstorCoreEngine {
 			}
 
 		}
+
+		long tEndExec = (new Date()).getTime();
+
+		this.executionTimeAnalyzers = tEndExec - tinitExec;
 	}
 
 	public RuntimeInformation computeDynamicInformation() throws Exception {
@@ -644,6 +656,18 @@ public class RtEngine extends AstorCoreEngine {
 
 	public void setTestExecutor(TestCaseExecutor testExecutor) {
 		this.testExecutor = testExecutor;
+	}
+
+	public long getExecutionTimeTests() {
+		return executionTimeTests;
+	}
+
+	public Exception getExceptionReceived() {
+		return exceptionReceived;
+	}
+
+	public long getExecutionTimeAnalyzers() {
+		return executionTimeAnalyzers;
 	}
 
 }
