@@ -1,6 +1,7 @@
 
 package fr.inria.jtanre;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -219,40 +220,68 @@ public class RtExtensionTest {
 		assertNotNull(linePerson18);
 		assertTrue(linePerson18.length() > 0);
 
-		System.out.println(cr.getMatrix().getResultExecution());
 		assertTrue(cr.getMatrix().getResultExecution().containsKey(linePerson18));
 
 		Set<Integer> executed = cr.getMatrix().getResultExecution().get(linePerson18);
 
 		assertTrue(executed.size() == 2);
 
-		//
+		// Test with dependency that is in the classpath
 		String lineT3418 = cr.getMatrix().getLineKey("RottenTestsFinder/FakePaperTests/RTFRow34Dependency", 18);
+
+		try {
+			Class c = Class.forName("com.google.gson.JsonObject");
+			assertNotNull(c);
+		} catch (Exception e) {
+			fail("class must  be in classpath");
+		}
 
 		assertNotNull(lineT3418);
 		assertTrue(lineT3418.length() > 0);
 
-		System.out.println(cr.getMatrix().getResultExecution());
 		assertTrue(cr.getMatrix().getResultExecution().containsKey(lineT3418));
 
 		Set<Integer> executed3418 = cr.getMatrix().getResultExecution().get(lineT3418);
 
 		assertTrue(executed3418.size() == 1);
 
-		// Now not covered
+		// Not covered
 
 		String lineT3417 = cr.getMatrix().getLineKey("RottenTestsFinder/FakePaperTests/RTFRow34Dependency", 17);
 
 		assertNotNull(lineT3417);
 		assertTrue(lineT3417.length() > 0);
 
-		System.out.println(cr.getMatrix().getResultExecution());
 		assertFalse(cr.getMatrix().getResultExecution().containsKey(lineT3417));
 
 		// Set<Integer> executed3415 =
 		// cr.getMatrix().getResultExecution().get(lineT3415);
 
 		// assertTrue(executed3415.size() == 0);
+
+		// Dependency not in the classpath:
+
+		// check if the class is in the classpath
+		try {
+			Class c = Class.forName("com.opencsv.CSVWriter");
+			fail("class must not be in classpath");
+		} catch (Exception e) {
+			// must fail
+		}
+
+		String lineT3428 = cr.getMatrix().getLineKey("RottenTestsFinder/FakePaperTests/RTFRow34Dependency", 28);
+
+		assertNotNull(lineT3428);
+		assertTrue(lineT3428.length() > 0);
+
+		System.out.println(cr.getMatrix().getResultExecution());
+		assertTrue(cr.getMatrix().getResultExecution().containsKey(lineT3428));
+
+		Set<Integer> executed3428 = cr.getMatrix().getResultExecution().get(lineT3428);
+
+		assertEquals(1, executed3428.size());
+		// The test with the dependency does not fail
+		assertTrue(cr.getMatrix().getTestResult().get(executed3428.stream().findFirst().get()));
 
 	}
 
