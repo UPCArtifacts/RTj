@@ -154,6 +154,31 @@ public class JSonResultOriginal implements RtOutput {
 			boolean hasTryCatch = tr.hasTryCatch();
 			testjson.addProperty("has_try_catch", hasTryCatch);
 
+			List<Helper> allHelpers = new ArrayList<Helper>();
+			allHelpers.addAll(tr.getClassificationHelperCall().getResultExecuted());
+			allHelpers.addAll(tr.getClassificationHelperCall().getResultNotExecuted());
+
+			JsonArray helperInfo = new JsonArray();
+			testjson.add("helper_info", helperInfo);
+
+			for (Helper anHelper : allHelpers) {
+				JsonObject jsonsingleHelper = new JsonObject();
+				jsonsingleHelper.addProperty("distance_calls", anHelper.getCalls().size());
+				jsonsingleHelper.addProperty("distance_hierarchy", anHelper.distance);
+				helperInfo.add(jsonsingleHelper);
+
+				JsonObject assertionjson = getJsonElement(commitid, branch, remote, projectsubfolder,
+						anHelper.getAssertion().getCtAssertion());
+				jsonsingleHelper.add("assertion", assertionjson);
+				jsonsingleHelper.addProperty("other_branch_with_assert_executed", anHelper.isFp());
+				JsonArray callsarray = new JsonArray();
+				for (CtInvocation call : anHelper.getCalls()) {
+					callsarray.add(getJsonElement(commitid, branch, remote, projectsubfolder, call));
+				}
+				jsonsingleHelper.add("calls", callsarray);
+
+			}
+
 			int nrCasesNotExecuted = 0;
 
 			//
@@ -332,11 +357,13 @@ public class JSonResultOriginal implements RtOutput {
 			}
 
 			/// Dont include smoke
-			if (onerotten) {
+			if (ConfigurationProperties.getPropertyBool("includeNoRottenTest") || onerotten) {
 				testsArray.add(testjson);
 				nrRtest++;
 				rTestclasses.add(tr.getNameOfTestClass());
-			} else if (withexception) {
+			}
+
+			if (withexception) {
 				testsArray.add(testjson);
 				rTestclasses.add(tr.getNameOfTestClass());
 			}
