@@ -27,7 +27,16 @@ public abstract class HelperProcessor extends ElementProcessor<Helper, Helper> {
 		if (stmts.size() > 0) {
 			// To retrieve the parent, we take the first one
 			CtClass type = (CtClass) stmts.get(0).getParent(CtClass.class);
-			return filterHelper(aTestModelCtClass, stmts, new ArrayList());
+			List<Helper> helpersMined = filterHelper(aTestModelCtClass, stmts, new ArrayList());
+
+			// Update the distance
+			for (Helper aHelper : helpersMined) {
+
+				int distance = computeDistance(aHelper, aTestModelCtClass);
+				aHelper.setDistance(distance);
+			}
+
+			return helpersMined;
 		}
 		return null;
 	}
@@ -123,40 +132,74 @@ public abstract class HelperProcessor extends ElementProcessor<Helper, Helper> {
 			}
 
 		}
-		// Update the distance
-		for (Helper aHelper : helpersMined) {
+		return helpersMined;
+	}
 
-			// Check the distance:
+	@SuppressWarnings("rawtypes")
+	public int computeDistance(Helper aHelper) {
+		// Check the distance:
 
-			// Let's get the first invocation from the invocation chain
-			CtInvocation statementFirstCall = aHelper.getCalls().get(0);
-			// the class where the invocation is written
-			CtClass typeInvo = statementFirstCall.getParent(CtClass.class);
-			// the class where the invoked method
-			CtClass typeMethod = statementFirstCall.getExecutable().getDeclaration().getParent(CtClass.class);
+		// Let's get the first invocation from the invocation chain
+		CtInvocation statementFirstCall = aHelper.getCalls().get(0);
+		// the class where the invocation is written
+		CtClass typeInvo = statementFirstCall.getParent(CtClass.class);
+		// the class where the invoked method
+		CtClass typeMethod = statementFirstCall.getExecutable().getDeclaration().getParent(CtClass.class);
 
-			// if same target, distance is zero
-			if (typeInvo == typeMethod) {
-				aHelper.setDistance(0);
-			} else {
-				// if it's subtype, lets count the distance
-				if (typeInvo.isSubtypeOf(typeMethod.getReference())) {
+		// if same target, distance is zero
+		if (typeInvo == typeMethod) {
+			return (0);
+		} else {
+			// if it's subtype, lets count the distance
+			if (typeInvo.isSubtypeOf(typeMethod.getReference())) {
 
-					int distance = 0;
+				int distance = 0;
 
-					CtType typeToMount = typeInvo;
-					while (typeToMount != null && typeToMount != typeMethod) {
-						typeToMount = (CtClass) typeToMount.getSuperclass().getDeclaration();
-						distance++;
-					}
-					aHelper.setDistance(distance);
-				} else {
-					// Not subtype, the method helper is somewhere else.
-					aHelper.setDistance(-1);
+				CtType typeToMount = typeInvo;
+				while (typeToMount != null && typeToMount != typeMethod) {
+					typeToMount = (CtClass) typeToMount.getSuperclass().getDeclaration();
+					distance++;
 				}
+				return (distance);
+			} else {
+				// Not subtype, the method helper is somewhere else.
+				return (-1);
 			}
 		}
-		return helpersMined;
+	}
+
+	public int computeDistance(Helper aHelper, CtClass testClass) {
+		// Check the distance:
+
+		int numberInvocations = aHelper.getCalls().size();
+		// Let's get the LAST invocation from the invocation chain
+		CtInvocation statementFirstCall = aHelper.getCalls().get(numberInvocations - 1);
+		// the class where the invocation is written
+
+		CtClass typeInvo = testClass;// statementFirstCall.getParent(CtClass.class);
+		// the class where the invoked method
+		CtClass typeMethod = statementFirstCall.getExecutable().getDeclaration().getParent(CtClass.class);
+
+		// if same target, distance is zero
+		if (typeInvo == typeMethod) {
+			return (0);
+		} else {
+			// if it's subtype, lets count the distance
+			if (typeInvo.isSubtypeOf(typeMethod.getReference())) {
+
+				int distance = 0;
+
+				CtType typeToMount = typeInvo;
+				while (typeToMount != null && typeToMount != typeMethod) {
+					typeToMount = (CtClass) typeToMount.getSuperclass().getDeclaration();
+					distance++;
+				}
+				return (distance);
+			} else {
+				// Not subtype, the method helper is somewhere else.
+				return (-1);
+			}
+		}
 	}
 
 	private boolean checkOverride(ClassTypingContext context, CtMethod mthis, CtMethod mthat) {

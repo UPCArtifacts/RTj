@@ -34,10 +34,15 @@ public class FLWrapper implements TestCaseExecutor {
 	}
 
 	@Override
-	public FaultLocalizationResult runTests(ProjectRepairFacade projectToRepair, List<String> testToRun)
+	public FaultLocalizationResult runTests(ProjectRepairFacade projectToRepair, List<String> testClassesToRun)
 			throws Exception {
 
 		List<TestTuple> tests = testDetector.findTest(MutationSupporter.getFactory());
+		if (testClassesToRun != null && testClassesToRun.size() > 0) {
+			tests = tests.stream().filter(e -> testClassesToRun.contains(e.testClassToBeAmplified))
+					.collect(Collectors.toList());
+
+		}
 
 		MatrixCoverage matrix = coverageCalculator.getCoverageMatrix(
 				projectToRepair.getProperties().getDependenciesString(),

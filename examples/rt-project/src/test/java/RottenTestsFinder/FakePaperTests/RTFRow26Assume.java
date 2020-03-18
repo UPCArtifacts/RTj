@@ -40,4 +40,13 @@ public class RTFRow26Assume extends AbstractRTestCase {
 		anotherMethodHelper();
 	}
 
+	public static void anAssertionCall() {
+		int i = 10;
+		if (i > 13)
+			assertTrue(i > 0);
+	}
+
+	public static void aFarConditionalCall() {
+		anAssertionCall();
+	}
 }

@@ -1347,6 +1347,82 @@ public class RtTestExamples {
 	}
 
 	@Test
+	public void testRTFRow27DistanceBis() throws Exception {
+		RtEngine etEn = detectRtSkip();
+
+		List<TestIntermediateAnalysisResult> resultByTest = etEn.getResultByTest();
+		assertNotNull(resultByTest);
+
+		RuntimeInformation dynInf = etEn.computeDynamicInformation();
+
+		TestIntermediateAnalysisResult rottenTest5 = etEn.processSingleTest(dynInf,
+				"RottenTestsFinder.FakePaperTests.RTFRow27HelperDistance", "test6");
+
+		assertNotNull(rottenTest5);
+
+		assertFalse(rottenTest5.isSmokeTest());
+		assertTrue(rottenTest5.isRotten());
+		assertTrue(rottenTest5.getClassificationHelperCall().getResultNotExecuted().isEmpty());
+		assertFalse(rottenTest5.getClassificationHelperAssertion().getResultNotExecuted().isEmpty());
+
+		Helper rtHelperParent5 = rottenTest5.getClassificationHelperAssertion().getResultNotExecuted().get(0);
+		assertEquals(-1, rtHelperParent5.distance);
+
+	}
+
+	@Ignore
+	@Test
+	public void testRTFRow27DistanceFromTestDeclaredOnAbstractSimpleBug() throws Exception {
+		RtEngine etEn = detectRtSkip();
+
+		List<TestIntermediateAnalysisResult> resultByTest = etEn.getResultByTest();
+		assertNotNull(resultByTest);
+
+		RuntimeInformation dynInf = etEn.computeDynamicInformation();
+
+		// It does not detect this one. However it works fine in Flink
+		TestIntermediateAnalysisResult rottenTest5 = etEn.processSingleTest(dynInf,
+				"RottenTestsFinder.FakePaperTests.RTFRow27HelperDistanceBis", "test6");
+
+		assertNotNull(rottenTest5);
+
+		assertFalse(rottenTest5.isSmokeTest());
+		assertTrue(rottenTest5.isRotten());
+		assertTrue(rottenTest5.getClassificationHelperCall().getResultNotExecuted().isEmpty());
+		assertFalse(rottenTest5.getClassificationHelperAssertion().getResultNotExecuted().isEmpty());
+
+		Helper rtHelperParent5 = rottenTest5.getClassificationHelperAssertion().getResultNotExecuted().get(0);
+		assertEquals(-1, rtHelperParent5.distance);
+
+	}
+
+	@Test
+	@Ignore
+	public void testRTFRow27BugChainCalls() throws Exception {
+		RtEngine etEn = detectRtSkip();
+
+		List<TestIntermediateAnalysisResult> resultByTest = etEn.getResultByTest();
+		assertNotNull(resultByTest);
+
+		RuntimeInformation dynInf = etEn.computeDynamicInformation();
+
+		TestIntermediateAnalysisResult rottenTest5 = etEn.processSingleTest(dynInf,
+				"RottenTestsFinder.FakePaperTests.RTFRow27HelperDistance", "test5");
+
+		assertNotNull(rottenTest5);
+
+		assertFalse(rottenTest5.isSmokeTest());
+		assertTrue(rottenTest5.isRotten());
+		// The problem is in HelperProcessor.classifyHelpersAssertionExecution
+		assertFalse(rottenTest5.getClassificationHelperCall().getResultNotExecuted().isEmpty());
+		assertTrue(rottenTest5.getClassificationHelperAssertion().getResultNotExecuted().isEmpty());
+
+		Helper rtHelperParent5 = rottenTest5.getClassificationHelperCall().getResultNotExecuted().get(0);
+		assertEquals(-1, rtHelperParent5.distance);
+
+	}
+
+	@Test
 	public void testRTFRow28Inner() throws Exception {
 		RtEngine etEn = detectRtSkip();
 

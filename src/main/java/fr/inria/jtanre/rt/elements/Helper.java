@@ -18,7 +18,10 @@ public class Helper extends TestElement {
 	public boolean unexecutedAssert = false;
 	public boolean unexecutedCall = false;
 
-	public int distance = 0;
+	/**
+	 * We initialize it with the min value
+	 */
+	public int distance = Integer.MIN_VALUE;
 
 	public Helper(AsAssertion assertion) {
 		super("Helper");
