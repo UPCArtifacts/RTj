@@ -15,12 +15,14 @@ RTj
 
 ## Installation
 
-RTj depends on Astor project. So first, it's necessary to clone Astor from X, and then to build it using maven: (mvn install -DskipTests=true)
+RTj depends on Astor project. So first, it's necessary to clone [Astor](https://github.com/SpoonLabs/astor) , and then to build it using maven: (mvn install -DskipTests=true)
 
 Then, after cloning RTj project, go to the cloned project and run command `mvn package`. If the build sucessfully finishes, it should be the jar  `RTj-0.0.1-SNAPSHOT-jar-with-dependencies.jar` on folder `target`. (you can rename it to rtj.jar for simplicity).
 
 Before running the test cases, you need to compile the project under test.
 For that, go to `examples/rt-project` and execute `mvn test`.
+
+RTj uses the Maven plugin [project-info-maven-plugin](https://github.com/tdurieux/project-info-maven-plugin) to get the information of the Maven projects to analyze.  So, for installing project-info-maven-plugin please clone the that repo from  https://github.com/tdurieux/project-info-maven-plugin, and then run `mvn install`. Note that it does not work if the installation is done as follows: `mvn org.apache.maven.plugins:maven-dependency-plugin:3.1.1:get -DremoteRepositories=https://tdurieux.github.io/maven-repository/snapshots/ -Dartifact=com.github.tdurieux:project-config-maven-plugin:1.0-SNAPSHOT`
 
 
 ## Execution
@@ -66,7 +68,7 @@ Number Full Rotten Test: 2
 Detailed results saved on file: <Folder_Output>/rt_MyProject.json
 ```
 
-The file <Folder_Output>/rt_MyProject.json` is a JSON with all the information related to the Rotten green test found (Name of the test, location and code of assertions/helpers not executed, etc).
+The file `<Folder_Output>/rt_MyProject.json` is a JSON with all the information related to the Rotten green test found (Name of the test, location and code of assertions/helpers not executed, etc).
 For instance, this portion of the JSON shows as example, the information related to  test `BucketLeapArrayTest.testListWindowsNewBucket`, which was labeled as `Fully Rotten`. 
 
 ```
